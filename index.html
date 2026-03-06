@@ -5,819 +5,799 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AZ:RP Shop Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:      #070b0f;
-    --panel:   #0d1318;
-    --border:  #1a2a1a;
-    --green:   #00ff88;
-    --cyan:    #00d4ff;
-    --orange:  #ff8c00;
-    --red:     #ff3355;
-    --yellow:  #ffd700;
-    --dim:     #3a5a3a;
-    --text:    #b0c8b0;
-    --mono:    'Share Tech Mono', monospace;
-    --head:    'Rajdhani', sans-serif;
-  }
+:root {
+  --bg:     #050d0a;
+  --panel:  #091410;
+  --border: #0f2a1e;
+  --green:  #00ff88;
+  --cyan:   #00d4aa;
+  --sell:   #ff4466;
+  --buy:    #00ff88;
+  --orange: #ffaa00;
+  --yellow: #ffd700;
+  --dim:    #1a4a30;
+  --text:   #7abfa0;
+  --mono:   'Share Tech Mono', monospace;
+  --head:   'Rajdhani', sans-serif;
+}
 
-  * { margin:0; padding:0; box-sizing:border-box; }
+* { margin:0; padding:0; box-sizing:border-box; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 13px;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-  /* Scanlines */
-  body::before {
-    content:'';
-    position:fixed; inset:0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,255,136,0.015) 2px,
-      rgba(0,255,136,0.015) 4px
-    );
-    pointer-events:none;
-    z-index:9999;
-  }
+/* ── FIREFLY CANVAS ── */
+#fireflies {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
 
-  /* Noise */
-  body::after {
-    content:'';
-    position:fixed; inset:0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events:none;
-    z-index:9998;
-    opacity:0.4;
-  }
+/* Scanlines overlay */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(0,255,136,0.012) 3px, rgba(0,255,136,0.012) 4px
+  );
+  pointer-events:none;
+  z-index:9999;
+}
 
-  header {
-    border-bottom: 1px solid var(--border);
-    padding: 18px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: linear-gradient(90deg, rgba(0,255,136,0.04) 0%, transparent 60%);
-    position: sticky; top:0; z-index:100;
-    backdrop-filter: blur(8px);
-  }
+header {
+  position: sticky; top:0; z-index: 100;
+  border-bottom: 1px solid var(--border);
+  padding: 16px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(5,13,10,0.85);
+  backdrop-filter: blur(12px);
+}
 
-  .logo {
-    font-family: var(--head);
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: 3px;
-    color: var(--green);
-    text-shadow: 0 0 20px rgba(0,255,136,0.5);
-  }
-  .logo span { color: var(--cyan); }
+.logo {
+  font-family: var(--head);
+  font-size: 20px; font-weight:700;
+  letter-spacing: 3px;
+  color: var(--green);
+  text-shadow: 0 0 18px rgba(0,255,136,0.5);
+}
+.logo span { color: var(--cyan); }
 
-  .header-right {
-    display:flex; align-items:center; gap:20px;
-  }
+.hdr-right { display:flex; align-items:center; gap:16px; }
 
-  #status-dot {
-    width:8px; height:8px; border-radius:50%;
-    background: var(--dim);
-    box-shadow: 0 0 6px var(--dim);
-    animation: pulse 2s infinite;
-  }
-  #status-dot.live { background:var(--green); box-shadow:0 0 10px var(--green); }
-  #status-dot.error { background:var(--red); box-shadow:0 0 10px var(--red); animation:none; }
+#status-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:var(--dim); box-shadow:0 0 6px var(--dim);
+  animation: blink 2s infinite;
+}
+#status-dot.live  { background:var(--green); box-shadow:0 0 12px var(--green); }
+#status-dot.error { background:var(--sell);  box-shadow:0 0 10px var(--sell); animation:none; }
+#status-text { font-size:11px; color:var(--dim); letter-spacing:1px; }
 
-  @keyframes pulse {
-    0%,100% { opacity:1; }
-    50% { opacity:0.3; }
-  }
+.cfg-btn {
+  background:transparent; border:1px solid var(--border);
+  color:var(--text); font-family:var(--mono); font-size:11px;
+  padding:5px 12px; cursor:pointer; letter-spacing:1px; transition:all .2s;
+}
+.cfg-btn:hover { border-color:var(--cyan); color:var(--cyan); }
 
-  #status-text { font-size:11px; color:var(--dim); letter-spacing:1px; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-  .config-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 5px 12px;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: all .2s;
-  }
-  .config-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+/* ── MODAL ── */
+#modal {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,.8); z-index:200;
+  align-items:center; justify-content:center;
+}
+#modal.open { display:flex; }
+.mbox {
+  background:var(--panel); border:1px solid var(--border);
+  padding:28px; width:460px; max-width:90vw;
+  position:relative; z-index:1;
+}
+.mtitle { font-family:var(--head); font-size:15px; color:var(--cyan); letter-spacing:2px; margin-bottom:18px; }
+.mfield { margin-bottom:12px; }
+.mfield label { display:block; font-size:10px; color:var(--dim); margin-bottom:4px; letter-spacing:1px; }
+.mfield input {
+  width:100%; background:var(--bg); border:1px solid var(--border);
+  color:var(--green); font-family:var(--mono); font-size:12px;
+  padding:7px 10px; outline:none; transition:border-color .2s;
+}
+.mfield input:focus { border-color:var(--cyan); }
+.mactions { display:flex; gap:10px; margin-top:18px; }
+.btn-ok {
+  background:rgba(0,255,136,.1); border:1px solid var(--green);
+  color:var(--green); font-family:var(--mono); font-size:12px;
+  padding:7px 16px; cursor:pointer; letter-spacing:1px; transition:all .2s;
+}
+.btn-ok:hover { background:rgba(0,255,136,.2); }
+.btn-cancel {
+  background:transparent; border:1px solid var(--border);
+  color:var(--text); font-family:var(--mono); font-size:12px;
+  padding:7px 16px; cursor:pointer; transition:all .2s;
+}
+.btn-cancel:hover { border-color:var(--sell); color:var(--sell); }
 
-  /* Config modal */
-  #config-modal {
-    display:none;
-    position:fixed; inset:0;
-    background:rgba(0,0,0,0.8);
-    z-index:200;
-    align-items:center;
-    justify-content:center;
-  }
-  #config-modal.open { display:flex; }
-  .modal-box {
-    background:var(--panel);
-    border:1px solid var(--border);
-    padding:28px;
-    width:480px;
-    max-width:90vw;
-  }
-  .modal-title {
-    font-family:var(--head);
-    font-size:16px;
-    color:var(--cyan);
-    letter-spacing:2px;
-    margin-bottom:20px;
-  }
-  .modal-field { margin-bottom:14px; }
-  .modal-field label { display:block; font-size:11px; color:var(--dim); margin-bottom:5px; letter-spacing:1px; }
-  .modal-field input {
-    width:100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--green);
-    font-family: var(--mono);
-    font-size:12px;
-    padding: 8px 10px;
-    outline:none;
-    transition: border-color .2s;
-  }
-  .modal-field input:focus { border-color: var(--cyan); }
-  .modal-hint { font-size:11px; color:var(--dim); margin-top:4px; }
-  .modal-actions { display:flex; gap:10px; margin-top:20px; }
-  .btn-primary {
-    background: rgba(0,255,136,0.1);
-    border: 1px solid var(--green);
-    color: var(--green);
-    font-family:var(--mono);
-    font-size:12px;
-    padding:8px 18px;
-    cursor:pointer;
-    letter-spacing:1px;
-    transition:all .2s;
-  }
-  .btn-primary:hover { background:rgba(0,255,136,0.2); }
-  .btn-cancel {
-    background:transparent;
-    border:1px solid var(--border);
-    color:var(--text);
-    font-family:var(--mono);
-    font-size:12px;
-    padding:8px 18px;
-    cursor:pointer;
-    transition:all .2s;
-  }
-  .btn-cancel:hover { border-color:var(--red); color:var(--red); }
+/* ── MAIN ── */
+main {
+  position:relative; z-index:1;
+  padding:22px 28px; max-width:1600px; margin:0 auto;
+}
 
-  /* Main layout */
-  main { padding: 24px 32px; max-width:1600px; margin:0 auto; }
+/* ── TYPE TABS ── */
+.type-tabs {
+  display:flex; gap:0; margin-bottom:22px;
+  border:1px solid var(--border); width:fit-content;
+}
+.tab {
+  padding:8px 24px; font-family:var(--mono); font-size:11px;
+  letter-spacing:2px; cursor:pointer; transition:all .2s;
+  border:none; background:transparent; color:var(--dim);
+}
+.tab.active-all  { background:rgba(0,255,136,.1); color:var(--green); }
+.tab.active-buy  { background:rgba(0,255,136,.1); color:var(--buy); }
+.tab.active-sell { background:rgba(255,68,102,.1); color:var(--sell); }
+.tab:hover { color:var(--text); }
 
-  /* Stat cards */
-  .stat-row {
-    display:grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
-    gap:14px;
-    margin-bottom:28px;
-  }
+/* ── STAT CARDS ── */
+.stat-row {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px,1fr));
+  gap:12px; margin-bottom:22px;
+}
+.stat-card {
+  background:var(--panel); border:1px solid var(--border);
+  padding:16px 18px; position:relative; overflow:hidden;
+}
+.stat-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+}
+.sc-green::before  { background:var(--green); box-shadow:0 0 8px var(--green); }
+.sc-cyan::before   { background:var(--cyan);  box-shadow:0 0 8px var(--cyan); }
+.sc-sell::before   { background:var(--sell);  box-shadow:0 0 8px var(--sell); }
+.sc-orange::before { background:var(--orange);box-shadow:0 0 8px var(--orange); }
+.sc-yellow::before { background:var(--yellow);box-shadow:0 0 8px var(--yellow); }
 
-  .stat-card {
-    background:var(--panel);
-    border:1px solid var(--border);
-    padding:18px 20px;
-    position:relative;
-    overflow:hidden;
-    transition:border-color .2s;
-  }
-  .stat-card::before {
-    content:'';
-    position:absolute;
-    top:0; left:0; right:0;
-    height:2px;
-  }
-  .stat-card.green::before  { background:var(--green); box-shadow:0 0 10px var(--green); }
-  .stat-card.cyan::before   { background:var(--cyan);  box-shadow:0 0 10px var(--cyan); }
-  .stat-card.orange::before { background:var(--orange);box-shadow:0 0 10px var(--orange); }
-  .stat-card.yellow::before { background:var(--yellow);box-shadow:0 0 10px var(--yellow); }
+.sc-label { font-size:10px; letter-spacing:2px; color:var(--dim); margin-bottom:7px; text-transform:uppercase; }
+.sc-val   { font-family:var(--head); font-size:26px; font-weight:700; line-height:1; margin-bottom:3px; }
+.sc-sub   { font-size:10px; color:var(--dim); }
+.sc-green .sc-val  { color:var(--green); }
+.sc-cyan  .sc-val  { color:var(--cyan); }
+.sc-sell  .sc-val  { color:var(--sell); }
+.sc-orange .sc-val { color:var(--orange); }
+.sc-yellow .sc-val { color:var(--yellow); }
 
-  .stat-label {
-    font-size:10px;
-    letter-spacing:2px;
-    color:var(--dim);
-    margin-bottom:8px;
-    text-transform:uppercase;
-  }
-  .stat-value {
-    font-family:var(--head);
-    font-size:28px;
-    font-weight:700;
-    line-height:1;
-    margin-bottom:4px;
-  }
-  .stat-card.green .stat-value  { color:var(--green); }
-  .stat-card.cyan .stat-value   { color:var(--cyan); }
-  .stat-card.orange .stat-value { color:var(--orange); }
-  .stat-card.yellow .stat-value { color:var(--yellow); }
-  .stat-sub { font-size:10px; color:var(--dim); }
+/* ── CHARTS ── */
+.charts-grid {
+  display:grid; grid-template-columns:2fr 1fr;
+  gap:12px; margin-bottom:22px;
+}
+.chart-panel {
+  background:var(--panel); border:1px solid var(--border); padding:18px;
+}
+.panel-title {
+  font-family:var(--head); font-size:12px; letter-spacing:2px;
+  color:var(--cyan); text-transform:uppercase; margin-bottom:14px;
+  display:flex; align-items:center; gap:6px;
+}
+.panel-title::before { content:'//'; color:var(--dim); font-size:11px; }
 
-  /* Charts grid */
-  .charts-grid {
-    display:grid;
-    grid-template-columns: 2fr 1fr;
-    gap:14px;
-    margin-bottom:28px;
-  }
+.bottom-grid {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:12px; margin-bottom:22px;
+}
 
-  .chart-panel {
-    background:var(--panel);
-    border:1px solid var(--border);
-    padding:20px;
-  }
+/* ── BUY/SELL SPLIT CHART ── */
+.split-panel {
+  background:var(--panel); border:1px solid var(--border); padding:18px;
+  margin-bottom:22px;
+}
+.split-inner {
+  display:grid; grid-template-columns:1fr 1fr; gap:18px;
+}
+.split-side-label {
+  font-family:var(--head); font-size:11px; letter-spacing:2px;
+  margin-bottom:10px; text-transform:uppercase;
+}
+.lbl-buy  { color:var(--buy); }
+.lbl-sell { color:var(--sell); }
 
-  .panel-title {
-    font-family:var(--head);
-    font-size:13px;
-    letter-spacing:2px;
-    color:var(--cyan);
-    text-transform:uppercase;
-    margin-bottom:16px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  .panel-title::before {
-    content:'//';
-    color:var(--dim);
-    font-size:12px;
-  }
+/* BAR rows */
+.bar-item { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.bar-label { width:130px; font-size:11px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bar-track { flex:1; height:12px; background:var(--bg); border:1px solid var(--border); position:relative; }
+.bar-fill  { height:100%; transition:width .5s ease; }
+.bar-fill.buy  { background:linear-gradient(90deg,var(--buy),#00ffaa55); }
+.bar-fill.sell { background:linear-gradient(90deg,var(--sell),#ff446655); }
+.bar-val { width:80px; text-align:right; font-size:11px; }
+.bar-val.buy  { color:var(--buy); }
+.bar-val.sell { color:var(--sell); }
 
-  canvas { width:100% !important; }
+/* ── TABLE ── */
+.table-panel {
+  background:var(--panel); border:1px solid var(--border);
+  padding:18px; margin-bottom:22px;
+}
+.table-controls {
+  display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; align-items:center;
+}
+.srch {
+  background:var(--bg); border:1px solid var(--border);
+  color:var(--text); font-family:var(--mono); font-size:12px;
+  padding:6px 10px; outline:none; width:200px; transition:border-color .2s;
+}
+.srch:focus { border-color:var(--cyan); }
+.srch::placeholder { color:var(--dim); }
+.fsel {
+  background:var(--bg); border:1px solid var(--border);
+  color:var(--text); font-family:var(--mono); font-size:12px;
+  padding:6px 8px; outline:none; cursor:pointer;
+}
+#tbl-count { font-size:11px; color:var(--dim); margin-left:auto; }
 
-  /* Table */
-  .table-panel {
-    background:var(--panel);
-    border:1px solid var(--border);
-    padding:20px;
-    margin-bottom:28px;
-  }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+thead tr { border-bottom:1px solid var(--border); }
+th {
+  text-align:left; font-size:10px; letter-spacing:2px; color:var(--dim);
+  padding:7px 8px; text-transform:uppercase; cursor:pointer; user-select:none;
+}
+th:hover { color:var(--cyan); }
+th.sorted { color:var(--green); }
+td { padding:6px 8px; border-bottom:1px solid rgba(15,42,30,.6); }
+tr:hover td { background:rgba(0,255,136,.025); }
 
-  .table-controls {
-    display:flex; gap:12px; margin-bottom:16px; align-items:center; flex-wrap:wrap;
-  }
+td.nick  { color:var(--cyan); }
+td.item  { color:var(--text); }
+td.qty   { color:var(--orange); text-align:right; }
+td.price { color:var(--green); text-align:right; font-weight:bold; }
+td.ppu   { color:var(--dim); text-align:right; font-size:11px; }
+td.date  { color:var(--dim); font-size:11px; }
+td.time  { color:var(--dim); font-size:11px; }
+td.type-buy  { color:var(--buy);  font-size:10px; letter-spacing:1px; }
+td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
 
-  .search-input {
-    background:var(--bg);
-    border:1px solid var(--border);
-    color:var(--text);
-    font-family:var(--mono);
-    font-size:12px;
-    padding:6px 12px;
-    outline:none;
-    width:220px;
-    transition:border-color .2s;
-  }
-  .search-input:focus { border-color:var(--cyan); }
-  .search-input::placeholder { color:var(--dim); }
+.pagination {
+  display:flex; gap:5px; justify-content:flex-end; margin-top:12px; align-items:center;
+}
+.pg-btn {
+  background:transparent; border:1px solid var(--border);
+  color:var(--text); font-family:var(--mono); font-size:11px;
+  padding:4px 9px; cursor:pointer; transition:all .15s;
+}
+.pg-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+.pg-btn.active { border-color:var(--green); color:var(--green); background:rgba(0,255,136,.08); }
+.pg-btn:disabled { opacity:.3; cursor:default; }
 
-  .filter-select {
-    background:var(--bg);
-    border:1px solid var(--border);
-    color:var(--text);
-    font-family:var(--mono);
-    font-size:12px;
-    padding:6px 10px;
-    outline:none;
-    cursor:pointer;
-  }
+.no-data {
+  text-align:center; padding:50px 20px; color:var(--dim);
+}
+.no-data .nd-t {
+  font-family:var(--head); font-size:18px; color:var(--border);
+  letter-spacing:3px; margin-bottom:10px;
+}
 
-  table {
-    width:100%;
-    border-collapse:collapse;
-    font-size:12px;
-  }
-  thead tr {
-    border-bottom:1px solid var(--border);
-  }
-  th {
-    text-align:left;
-    font-size:10px;
-    letter-spacing:2px;
-    color:var(--dim);
-    padding:8px 10px;
-    text-transform:uppercase;
-    cursor:pointer;
-    user-select:none;
-  }
-  th:hover { color:var(--cyan); }
-  th.sorted { color:var(--green); }
+/* ── LOADING ── */
+#loading {
+  position:fixed; inset:0; background:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  z-index:300; flex-direction:column; gap:14px;
+}
+.ld-text { font-family:var(--head); font-size:16px; letter-spacing:4px; color:var(--green); animation:blink 1s infinite; }
+.ld-bar  { width:180px; height:2px; background:var(--border); position:relative; overflow:hidden; }
+.ld-bar::after {
+  content:''; position:absolute; top:0; left:-50%; width:50%; height:100%;
+  background:var(--green); animation:ldmove 1s infinite linear;
+}
+@keyframes ldmove { to { left:100%; } }
 
-  td {
-    padding:7px 10px;
-    border-bottom:1px solid rgba(26,42,26,0.5);
-    transition:background .1s;
-  }
-  tr:hover td { background:rgba(0,255,136,0.03); }
-
-  td.nick   { color:var(--cyan); }
-  td.item   { color:var(--text); }
-  td.qty    { color:var(--orange); text-align:right; }
-  td.price  { color:var(--green);  text-align:right; font-weight:bold; }
-  td.date   { color:var(--dim); font-size:11px; }
-  td.time   { color:var(--dim); font-size:11px; }
-
-  .pagination {
-    display:flex; gap:6px; justify-content:flex-end; margin-top:14px; align-items:center;
-  }
-  .pg-btn {
-    background:transparent;
-    border:1px solid var(--border);
-    color:var(--text);
-    font-family:var(--mono);
-    font-size:11px;
-    padding:4px 10px;
-    cursor:pointer;
-    transition:all .15s;
-  }
-  .pg-btn:hover { border-color:var(--cyan); color:var(--cyan); }
-  .pg-btn.active { border-color:var(--green); color:var(--green); background:rgba(0,255,136,0.08); }
-  .pg-btn:disabled { opacity:0.3; cursor:default; }
-
-  /* Bottom grid */
-  .bottom-grid {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
-    margin-bottom:28px;
-  }
-
-  /* No data state */
-  .no-data {
-    text-align:center;
-    padding:60px 20px;
-    color:var(--dim);
-  }
-  .no-data .nd-title {
-    font-family:var(--head);
-    font-size:20px;
-    color:var(--border);
-    letter-spacing:3px;
-    margin-bottom:12px;
-  }
-  .no-data code {
-    display:inline-block;
-    background:var(--bg);
-    border:1px solid var(--border);
-    padding:8px 14px;
-    font-size:12px;
-    color:var(--cyan);
-    margin-top:10px;
-  }
-
-  /* Loading */
-  #loading {
-    position:fixed; inset:0;
-    background:var(--bg);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    z-index:300;
-    flex-direction:column;
-    gap:16px;
-  }
-  .loading-text {
-    font-family:var(--head);
-    font-size:18px;
-    letter-spacing:4px;
-    color:var(--green);
-    animation:blink 1s infinite;
-  }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
-  .loading-bar {
-    width:200px; height:2px;
-    background:var(--border);
-    position:relative; overflow:hidden;
-  }
-  .loading-bar::after {
-    content:'';
-    position:absolute;
-    top:0; left:-50%;
-    width:50%; height:100%;
-    background:var(--green);
-    animation:load 1s infinite linear;
-  }
-  @keyframes load { to { left:100%; } }
-
-  .bar-item { display:flex; align-items:center; gap:8px; margin-bottom:7px; }
-  .bar-label { width:120px; font-size:11px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .bar-track { flex:1; height:14px; background:var(--bg); border:1px solid var(--border); position:relative; }
-  .bar-fill { height:100%; background:linear-gradient(90deg, var(--green), var(--cyan)); transition:width .6s ease; }
-  .bar-val { width:70px; text-align:right; font-size:11px; color:var(--green); }
-
-  @media(max-width:900px){
-    .charts-grid { grid-template-columns:1fr; }
-    .bottom-grid  { grid-template-columns:1fr; }
-    main { padding:16px; }
-  }
+@media(max-width:900px){
+  .charts-grid,.bottom-grid,.split-inner { grid-template-columns:1fr; }
+  main { padding:14px; }
+}
 </style>
 </head>
 <body>
 
+<canvas id="fireflies"></canvas>
+
 <div id="loading">
-  <div class="loading-text">LOADING DATA</div>
-  <div class="loading-bar"></div>
+  <div class="ld-text">LOADING DATA</div>
+  <div class="ld-bar"></div>
 </div>
 
-<div id="config-modal">
-  <div class="modal-box">
-    <div class="modal-title">// GIST CONFIG</div>
-    <div class="modal-field">
+<div id="modal">
+  <div class="mbox">
+    <div class="mtitle">// CONFIG</div>
+    <div class="mfield">
       <label>GIST ID</label>
-      <input type="text" id="cfg-gist-id" placeholder="abc123def456...">
-      <div class="modal-hint">Из URL: gist.github.com/username/<b>ЭТОТ_ID</b></div>
+      <input type="text" id="cfg-gist" placeholder="abc123...">
     </div>
-    <div class="modal-field">
-      <label>AUTO REFRESH (сек, 0 = выкл)</label>
-      <input type="number" id="cfg-refresh" value="60" min="0">
+    <div class="mfield">
+      <label>AUTO REFRESH (sec, 0=off)</label>
+      <input type="number" id="cfg-ref" value="60" min="0">
     </div>
-    <div class="modal-actions">
-      <button class="btn-primary" onclick="saveConfig()">СОХРАНИТЬ</button>
-      <button class="btn-cancel"  onclick="closeModal()">ОТМЕНА</button>
+    <div class="mactions">
+      <button class="btn-ok" onclick="saveConfig()">SAVE</button>
+      <button class="btn-cancel" onclick="closeModal()">CANCEL</button>
     </div>
   </div>
 </div>
 
 <header>
   <div class="logo">AZ:RP <span>//</span> SHOP MONITOR</div>
-  <div class="header-right">
+  <div class="hdr-right">
     <div id="status-dot"></div>
     <div id="status-text">NO DATA</div>
-    <button class="config-btn" onclick="openModal()">⚙ CONFIG</button>
+    <button class="cfg-btn" onclick="openModal()">⚙ CONFIG</button>
   </div>
 </header>
 
 <main>
+
+  <!-- TYPE FILTER TABS -->
+  <div class="type-tabs">
+    <button class="tab active-all" id="tab-all"  onclick="setTypeFilter('all')">ALL</button>
+    <button class="tab"            id="tab-buy"  onclick="setTypeFilter('buy')">▲ BUY</button>
+    <button class="tab"            id="tab-sell" onclick="setTypeFilter('sell')">▼ SELL</button>
+  </div>
+
+  <!-- STAT CARDS -->
   <div class="stat-row">
-    <div class="stat-card green">
-      <div class="stat-label">TOTAL RECORDS</div>
-      <div class="stat-value" id="s-total">—</div>
-      <div class="stat-sub">транзакций</div>
+    <div class="stat-card sc-green">
+      <div class="sc-label">TOTAL RECORDS</div>
+      <div class="sc-val" id="s-total">—</div>
+      <div class="sc-sub" id="s-total-sub">transactions</div>
     </div>
-    <div class="stat-card cyan">
-      <div class="stat-label">TOTAL REVENUE</div>
-      <div class="stat-value" id="s-revenue">—</div>
-      <div class="stat-sub">$ оборот</div>
+    <div class="stat-card sc-cyan">
+      <div class="sc-label">TOTAL REVENUE</div>
+      <div class="sc-val" id="s-revenue">—</div>
+      <div class="sc-sub">$ turnover</div>
     </div>
-    <div class="stat-card orange">
-      <div class="stat-label">UNIQUE ITEMS</div>
-      <div class="stat-value" id="s-items">—</div>
-      <div class="stat-sub">видов товаров</div>
+    <div class="stat-card sc-buy" style="--accent:var(--buy)">
+      <div class="sc-label" style="position:relative">
+        PURCHASES
+        <span style="position:absolute;right:0;font-size:18px;color:var(--buy);font-family:var(--head)" id="s-buy-pct"></span>
+      </div>
+      <div class="sc-val" id="s-buy" style="color:var(--buy)">—</div>
+      <div class="sc-sub" id="s-buy-sum">$ bought</div>
     </div>
-    <div class="stat-card yellow">
-      <div class="stat-label">UNIQUE BUYERS</div>
-      <div class="stat-value" id="s-buyers">—</div>
-      <div class="stat-sub">покупателей</div>
+    <div class="stat-card sc-sell">
+      <div class="sc-label" style="position:relative">
+        SALES
+        <span style="position:absolute;right:0;font-size:18px;color:var(--sell);font-family:var(--head)" id="s-sell-pct"></span>
+      </div>
+      <div class="sc-val" id="s-sell">—</div>
+      <div class="sc-sub" id="s-sell-sum">$ sold</div>
     </div>
-    <div class="stat-card green">
-      <div class="stat-label">LAST UPDATE</div>
-      <div class="stat-value" id="s-date" style="font-size:16px">—</div>
-      <div class="stat-sub">последняя запись</div>
+    <div class="stat-card sc-orange">
+      <div class="sc-label">UNIQUE ITEMS</div>
+      <div class="sc-val" id="s-items">—</div>
+      <div class="sc-sub">item types</div>
+    </div>
+    <div class="stat-card sc-yellow">
+      <div class="sc-label">LAST UPDATE</div>
+      <div class="sc-val" id="s-date" style="font-size:15px">—</div>
+      <div class="sc-sub">latest record</div>
     </div>
   </div>
 
+  <!-- DAILY CHART + PIE -->
   <div class="charts-grid">
     <div class="chart-panel">
-      <div class="panel-title">Оборот по дням ($)</div>
-      <canvas id="chart-daily" height="180"></canvas>
+      <div class="panel-title">Daily turnover ($)</div>
+      <canvas id="chart-daily" height="160"></canvas>
     </div>
     <div class="chart-panel">
-      <div class="panel-title">Топ товаров по выручке</div>
-      <canvas id="chart-items" height="180"></canvas>
+      <div class="panel-title">Top items by revenue</div>
+      <canvas id="chart-items" height="160"></canvas>
     </div>
   </div>
 
+  <!-- BUY / SELL SPLIT -->
+  <div class="split-panel">
+    <div class="panel-title" style="margin-bottom:16px">Buy / Sell breakdown by item</div>
+    <div class="split-inner">
+      <div>
+        <div class="split-side-label lbl-buy">▲ PURCHASES</div>
+        <div id="bars-buy"></div>
+      </div>
+      <div>
+        <div class="split-side-label lbl-sell">▼ SALES</div>
+        <div id="bars-sell"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP BUYERS -->
   <div class="bottom-grid">
     <div class="chart-panel">
-      <div class="panel-title">Топ покупателей ($)</div>
-      <div id="buyers-bars"></div>
+      <div class="panel-title">Top buyers ($)</div>
+      <div id="bars-buyers"></div>
     </div>
     <div class="chart-panel">
-      <div class="panel-title">Топ товаров по кол-ву</div>
-      <div id="qty-bars"></div>
+      <div class="panel-title">Top items by qty</div>
+      <div id="bars-qty"></div>
     </div>
   </div>
 
+  <!-- TABLE -->
   <div class="table-panel">
-    <div class="panel-title">Все транзакции</div>
+    <div class="panel-title">All transactions</div>
     <div class="table-controls">
-      <input class="search-input" id="tbl-search" placeholder="Поиск по нику / товару...">
-      <select class="filter-select" id="tbl-item">
-        <option value="">Все товары</option>
-      </select>
-      <select class="filter-select" id="tbl-date">
-        <option value="">Все даты</option>
-      </select>
-      <span style="color:var(--dim);font-size:11px;margin-left:auto" id="tbl-count"></span>
+      <input class="srch" id="tbl-q"    placeholder="Nick / item search...">
+      <select class="fsel" id="tbl-item"><option value="">All items</option></select>
+      <select class="fsel" id="tbl-date"><option value="">All dates</option></select>
+      <span id="tbl-count"></span>
     </div>
     <div id="tbl-wrap">
-      <div class="no-data">
-        <div class="nd-title">NO DATA</div>
-        <div>Настрой Gist ID в конфиге</div>
-        <code>⚙ CONFIG → GIST ID → СОХРАНИТЬ</code>
-      </div>
+      <div class="no-data"><div class="nd-t">NO DATA</div><div>Set Gist ID in config</div></div>
     </div>
     <div class="pagination" id="pagination"></div>
   </div>
+
 </main>
 
 <script>
-// ======================== CONFIG ========================
-const CFG_KEY = 'shopmon_cfg';
-let cfg = { gistId: 'd8e785e0517eb5781dfab054d861dc8f', refresh: 60 };
-try { cfg = Object.assign(cfg, JSON.parse(localStorage.getItem(CFG_KEY) || '{}')); } catch(e){}
-// Всегда используем этот Gist
-cfg.gistId = 'd8e785e0517eb5781dfab054d861dc8f';
+// ════════════════════ FIREFLIES ════════════════════
+(function(){
+  const canvas = document.getElementById('fireflies');
+  const ctx    = canvas.getContext('2d');
+  let W, H, flies = [];
+  const N = 55;
 
-let rawData    = [];
-let filtered   = [];
-let sortCol    = 'date';
-let sortDir    = -1;
-let page       = 0;
-const PER_PAGE = 50;
+  function resize(){
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  for(let i=0;i<N;i++){
+    flies.push({
+      x:  Math.random()*1000,
+      y:  Math.random()*1000,
+      vx: (Math.random()-.5)*.35,
+      vy: (Math.random()-.5)*.35,
+      r:  Math.random()*1.8+.6,
+      // life cycle for pulsing
+      phase: Math.random()*Math.PI*2,
+      speed: Math.random()*.012+.006,
+      // colour: mostly green, occasional cyan
+      hue: Math.random()<.8 ? 148 : 170,
+    });
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const t = performance.now()/1000;
+    flies.forEach(f=>{
+      f.x += f.vx; f.y += f.vy;
+      f.phase += f.speed;
+      // wrap
+      if(f.x<-10) f.x=W+10; if(f.x>W+10) f.x=-10;
+      if(f.y<-10) f.y=H+10; if(f.y>H+10) f.y=-10;
+
+      const alpha = (.35 + .55*Math.abs(Math.sin(f.phase)));
+      const glow  = f.r * (3 + 3*Math.abs(Math.sin(f.phase)));
+
+      // glow halo
+      const g = ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,glow*4);
+      g.addColorStop(0, `hsla(${f.hue},100%,60%,${alpha*.25})`);
+      g.addColorStop(1, 'transparent');
+      ctx.beginPath();
+      ctx.arc(f.x,f.y,glow*4,0,Math.PI*2);
+      ctx.fillStyle = g;
+      ctx.fill();
+
+      // core dot
+      ctx.beginPath();
+      ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
+      ctx.fillStyle = `hsla(${f.hue},100%,75%,${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ════════════════════ APP ════════════════════
+const CFG_KEY = 'shopmon_cfg';
+let cfg = { gistId:'d8e785e0517eb5781dfab054d861dc8f', refresh:60 };
+try { Object.assign(cfg, JSON.parse(localStorage.getItem(CFG_KEY)||'{}')); } catch(e){}
+cfg.gistId = 'd8e785e0517eb5781dfab054d861dc8f'; // hardcoded
+
+let rawData  = [];
+let filtered = [];
+let typeFilter = 'all';
+let sortCol = 'date', sortDir = -1;
+let page = 0;
+const PER = 50;
+let chartDaily = null, chartItems = null;
 let refreshTimer = null;
 
-// Chart instances
-let chartDaily = null;
-let chartItems = null;
-
-// ======================== MODAL ========================
+// ── Modal ──
 function openModal(){
-  document.getElementById('cfg-gist-id').value  = cfg.gistId;
-  document.getElementById('cfg-refresh').value  = cfg.refresh;
-  document.getElementById('config-modal').classList.add('open');
+  document.getElementById('cfg-gist').value = cfg.gistId;
+  document.getElementById('cfg-ref').value  = cfg.refresh;
+  document.getElementById('modal').classList.add('open');
 }
-function closeModal(){
-  document.getElementById('config-modal').classList.remove('open');
-}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
 function saveConfig(){
-  cfg.gistId  = document.getElementById('cfg-gist-id').value.trim();
-  cfg.refresh = parseInt(document.getElementById('cfg-refresh').value) || 0;
+  cfg.gistId  = document.getElementById('cfg-gist').value.trim();
+  cfg.refresh = parseInt(document.getElementById('cfg-ref').value)||0;
   localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
-  closeModal();
-  startRefreshCycle();
-  loadData();
+  closeModal(); startRefresh(); loadData();
 }
-document.getElementById('config-modal').addEventListener('click', e => {
-  if(e.target === document.getElementById('config-modal')) closeModal();
+document.getElementById('modal').addEventListener('click', e=>{
+  if(e.target===document.getElementById('modal')) closeModal();
 });
 
-// ======================== LOAD ========================
-function fixRecord(r) { return r; }
+// ── Status ──
+function hideLoading(){ document.getElementById('loading').style.display='none'; }
+function setStatus(s,t){
+  document.getElementById('status-dot').className = s==='live'?'live':s==='error'?'error':'';
+  document.getElementById('status-text').textContent = t;
+}
 
+// ── Load ──
 async function loadData(){
   if(!cfg.gistId){ hideLoading(); setStatus('error','NO GIST ID'); return; }
   setStatus('live','LOADING...');
   try {
-    const url = `https://api.github.com/gists/${cfg.gistId}`;
-    const r = await fetch(url, { headers:{ Accept:'application/vnd.github.v3+json' } });
-    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const r = await fetch(`https://api.github.com/gists/${cfg.gistId}`,
+      { headers:{ Accept:'application/vnd.github.v3+json' } });
+    if(!r.ok) throw new Error('HTTP '+r.status);
     const gist = await r.json();
-
     const file = gist.files['shop_history.json'];
-    if(!file) throw new Error('shop_history.json not found in gist');
-
+    if(!file) throw new Error('shop_history.json not found');
     let jsonText;
     if(file.truncated){
-      // Fetch raw as ArrayBuffer and decode as windows-1251 directly
       const raw = await fetch(file.raw_url);
       const buf = await raw.arrayBuffer();
-      jsonText = new TextDecoder('windows-1251').decode(buf);
+      jsonText = new TextDecoder('utf-8').decode(buf);
     } else {
       jsonText = file.content;
     }
-
-    const parsed = JSON.parse(jsonText);
-    rawData = parsed.map(fixRecord);
-    setStatus('live', `OK · ${rawData.length} записей`);
+    rawData = JSON.parse(jsonText);
+    // Ensure type field exists (backward compat)
+    rawData.forEach(r=>{ if(!r.type) r.type='buy'; });
+    setStatus('live', `OK · ${rawData.length} records`);
     renderAll();
   } catch(e){
-    setStatus('error', 'ERR: ' + e.message);
+    setStatus('error','ERR: '+e.message);
     hideLoading();
   }
 }
 
-function hideLoading(){ document.getElementById('loading').style.display = 'none'; }
-function setStatus(state, text){
-  const dot = document.getElementById('status-dot');
-  dot.className = state === 'live' ? 'live' : state === 'error' ? 'error' : '';
-  document.getElementById('status-text').textContent = text;
-}
-
-function startRefreshCycle(){
+function startRefresh(){
   if(refreshTimer) clearInterval(refreshTimer);
-  if(cfg.refresh > 0){
-    refreshTimer = setInterval(loadData, cfg.refresh * 1000);
-  }
+  if(cfg.refresh>0) refreshTimer=setInterval(loadData, cfg.refresh*1000);
 }
 
-// ======================== RENDER ========================
+// ── Type filter ──
+function setTypeFilter(t){
+  typeFilter = t;
+  ['all','buy','sell'].forEach(x=>{
+    const btn = document.getElementById('tab-'+x);
+    btn.className = 'tab' + (x===t ? ` active-${x}` : '');
+  });
+  page = 0;
+  buildStats();
+  buildDailyChart();
+  buildItemsChart();
+  buildBuyersBars();
+  buildQtyBars();
+  applyFilters();
+}
+
+function visibleData(){
+  if(typeFilter==='all') return rawData;
+  return rawData.filter(r=>r.type===typeFilter);
+}
+
+// ── Format ──
+function fmt$(n){ return '$'+Math.round(n).toLocaleString('ru'); }
+function fmtN(n){ return n.toLocaleString('ru'); }
+
+// ── Render all ──
 function renderAll(){
   hideLoading();
   buildStats();
   buildDailyChart();
   buildItemsChart();
+  buildBuySellBars();
   buildBuyersBars();
   buildQtyBars();
   buildFilters();
   applyFilters();
 }
 
-function fmt$(n){ return '$' + n.toLocaleString('ru'); }
-function fmtN(n){ return n.toLocaleString('ru'); }
-
 function buildStats(){
-  const total   = rawData.length;
-  const revenue = rawData.reduce((s,r) => s + r.price, 0);
-  const items   = new Set(rawData.map(r=>r.item)).size;
-  const buyers  = new Set(rawData.map(r=>r.nick)).size;
-  const dates   = rawData.map(r=>r.date).filter(Boolean).sort();
-  const lastDate= dates[dates.length-1] || '—';
+  const d   = visibleData();
+  const all = rawData;
 
-  document.getElementById('s-total').textContent   = fmtN(total);
-  document.getElementById('s-revenue').textContent = fmt$(revenue);
-  document.getElementById('s-items').textContent   = fmtN(items);
-  document.getElementById('s-buyers').textContent  = fmtN(buyers);
-  document.getElementById('s-date').textContent    = lastDate;
+  const buyRecs  = all.filter(r=>r.type==='buy');
+  const sellRecs = all.filter(r=>r.type==='sell');
+  const buySum   = buyRecs.reduce((s,r)=>s+r.price,0);
+  const sellSum  = sellRecs.reduce((s,r)=>s+r.price,0);
+  const total    = buySum + sellSum;
+
+  document.getElementById('s-total').textContent   = fmtN(d.length);
+  document.getElementById('s-revenue').textContent = fmt$(d.reduce((s,r)=>s+r.price,0));
+  document.getElementById('s-buy').textContent     = fmtN(buyRecs.length);
+  document.getElementById('s-buy-sum').textContent = fmt$(buySum)+' bought';
+  document.getElementById('s-sell').textContent    = fmtN(sellRecs.length);
+  document.getElementById('s-sell-sum').textContent= fmt$(sellSum)+' sold';
+  document.getElementById('s-buy-pct').textContent = total>0 ? Math.round(buySum/total*100)+'%' : '';
+  document.getElementById('s-sell-pct').textContent= total>0 ? Math.round(sellSum/total*100)+'%' : '';
+  document.getElementById('s-items').textContent   = new Set(d.map(r=>r.item)).size;
+  const dates = all.map(r=>r.date).filter(Boolean).sort();
+  document.getElementById('s-date').textContent    = dates[dates.length-1]||'—';
 }
 
 function buildDailyChart(){
-  const byDay = {};
-  rawData.forEach(r => {
-    const d = r.date || 'unknown';
-    byDay[d] = (byDay[d] || 0) + r.price;
-  });
-  const labels = Object.keys(byDay).sort();
-  const values = labels.map(l => byDay[l]);
-
-  const ctx = document.getElementById('chart-daily').getContext('2d');
+  const d = visibleData();
+  const byDay={};
+  d.forEach(r=>{ const k=r.date||'?'; byDay[k]=(byDay[k]||0)+r.price; });
+  const labels=Object.keys(byDay).sort();
+  const vals=labels.map(l=>byDay[l]);
+  const color = typeFilter==='sell' ? '#ff4466' : typeFilter==='buy' ? '#00ff88' : '#00d4aa';
+  const ctx=document.getElementById('chart-daily').getContext('2d');
   if(chartDaily) chartDaily.destroy();
-  chartDaily = new Chart(ctx, {
+  chartDaily=new Chart(ctx,{
     type:'bar',
-    data:{
-      labels,
-      datasets:[{
-        label:'Оборот $',
-        data: values,
-        backgroundColor: 'rgba(0,255,136,0.25)',
-        borderColor: '#00ff88',
-        borderWidth: 1,
-        borderRadius: 2,
-      }]
-    },
+    data:{ labels, datasets:[{
+      data:vals, backgroundColor:color+'33', borderColor:color,
+      borderWidth:1, borderRadius:2
+    }]},
     options:{
       responsive:true,
-      plugins:{ legend:{ display:false } },
+      plugins:{legend:{display:false}},
       scales:{
-        x:{ ticks:{ color:'#3a5a3a', font:{family:'Share Tech Mono',size:10} }, grid:{ color:'rgba(26,42,26,0.5)' } },
-        y:{ ticks:{ color:'#3a5a3a', font:{family:'Share Tech Mono',size:10}, callback:v=>fmt$(v) }, grid:{ color:'rgba(26,42,26,0.5)' } }
+        x:{ticks:{color:'#1a4a30',font:{family:'Share Tech Mono',size:10}},grid:{color:'rgba(15,42,30,.5)'}},
+        y:{ticks:{color:'#1a4a30',font:{family:'Share Tech Mono',size:10},callback:v=>fmt$(v)},grid:{color:'rgba(15,42,30,.5)'}}
       }
     }
   });
 }
 
 function buildItemsChart(){
-  const byItem = {};
-  rawData.forEach(r => {
-    byItem[r.item] = (byItem[r.item] || 0) + r.price;
-  });
-  const sorted = Object.entries(byItem).sort((a,b)=>b[1]-a[1]).slice(0,10);
-
-  const colors = ['#00ff88','#00d4ff','#ffd700','#ff8c00','#ff3355',
-                  '#66ffaa','#66ddff','#ffdd55','#ffaa44','#ff5577'];
-
-  const ctx = document.getElementById('chart-items').getContext('2d');
+  const d=visibleData();
+  const byItem={};
+  d.forEach(r=>{ byItem[r.item]=(byItem[r.item]||0)+r.price; });
+  const sorted=Object.entries(byItem).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const colors=['#00ff88','#00d4aa','#ffd700','#ffaa00','#ff4466','#44ffcc','#88ff44','#ff8844','#44aaff','#ff44aa'];
+  const ctx=document.getElementById('chart-items').getContext('2d');
   if(chartItems) chartItems.destroy();
-  chartItems = new Chart(ctx, {
+  chartItems=new Chart(ctx,{
     type:'doughnut',
     data:{
-      labels: sorted.map(e=>e[0]),
-      datasets:[{
-        data: sorted.map(e=>e[1]),
-        backgroundColor: colors.map(c=>c+'44'),
-        borderColor: colors,
-        borderWidth: 2,
-        hoverOffset: 6,
-      }]
+      labels:sorted.map(e=>e[0]),
+      datasets:[{data:sorted.map(e=>e[1]),
+        backgroundColor:colors.map(c=>c+'44'),borderColor:colors,borderWidth:2,hoverOffset:5}]
     },
     options:{
       responsive:true,
       plugins:{
-        legend:{ position:'right', labels:{ color:'#b0c8b0', font:{family:'Share Tech Mono',size:10}, boxWidth:12 } },
-        tooltip:{ callbacks:{ label: ctx => ` ${ctx.label}: ${fmt$(ctx.raw)}` } }
+        legend:{position:'right',labels:{color:'#7abfa0',font:{family:'Share Tech Mono',size:10},boxWidth:10}},
+        tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt$(c.raw)}`}}
       }
     }
   });
 }
 
-function buildBars(containerId, data, color){
-  const el = document.getElementById(containerId);
-  const max = data[0]?.[1] || 1;
-  el.innerHTML = data.map(([label,val]) => `
-    <div class="bar-item">
-      <div class="bar-label" title="${label}">${label}</div>
-      <div class="bar-track">
-        <div class="bar-fill" style="width:${(val/max*100).toFixed(1)}%;background:linear-gradient(90deg,${color},${color}88)"></div>
-      </div>
-      <div class="bar-val" style="color:${color}">${fmt$(val)}</div>
-    </div>`
-  ).join('');
+function buildBuySellBars(){
+  const byBuy={}, bySell={};
+  rawData.forEach(r=>{
+    if(r.type==='buy')  byBuy[r.item] =(byBuy[r.item] ||0)+r.price;
+    if(r.type==='sell') bySell[r.item]=(bySell[r.item]||0)+r.price;
+  });
+  const topBuy  = Object.entries(byBuy).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const topSell = Object.entries(bySell).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+  function makeBars(containerId, data, cls){
+    const el=document.getElementById(containerId);
+    const max=data[0]?.[1]||1;
+    el.innerHTML=data.map(([lbl,val])=>`
+      <div class="bar-item">
+        <div class="bar-label" title="${lbl}">${lbl}</div>
+        <div class="bar-track"><div class="bar-fill ${cls}" style="width:${(val/max*100).toFixed(1)}%"></div></div>
+        <div class="bar-val ${cls}">${fmt$(val)}</div>
+      </div>`).join('');
+  }
+  makeBars('bars-buy',  topBuy,  'buy');
+  makeBars('bars-sell', topSell, 'sell');
 }
 
 function buildBuyersBars(){
-  const byBuyer = {};
-  rawData.forEach(r => { byBuyer[r.nick] = (byBuyer[r.nick]||0) + r.price; });
-  const sorted = Object.entries(byBuyer).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  buildBars('buyers-bars', sorted, '#00d4ff');
+  const d=visibleData();
+  const byBuyer={};
+  d.forEach(r=>{ byBuyer[r.nick]=(byBuyer[r.nick]||0)+r.price; });
+  const sorted=Object.entries(byBuyer).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const el=document.getElementById('bars-buyers');
+  const max=sorted[0]?.[1]||1;
+  el.innerHTML=sorted.map(([lbl,val])=>`
+    <div class="bar-item">
+      <div class="bar-label" title="${lbl}">${lbl}</div>
+      <div class="bar-track"><div class="bar-fill buy" style="width:${(val/max*100).toFixed(1)}%"></div></div>
+      <div class="bar-val buy">${fmt$(val)}</div>
+    </div>`).join('');
 }
 
 function buildQtyBars(){
-  const byItem = {};
-  rawData.forEach(r => { byItem[r.item] = (byItem[r.item]||0) + r.qty; });
-  const sorted = Object.entries(byItem).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  const el = document.getElementById('qty-bars');
-  const max = sorted[0]?.[1] || 1;
-  el.innerHTML = sorted.map(([label,val]) => `
+  const d=visibleData();
+  const byItem={};
+  d.forEach(r=>{ byItem[r.item]=(byItem[r.item]||0)+r.qty; });
+  const sorted=Object.entries(byItem).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const el=document.getElementById('bars-qty');
+  const max=sorted[0]?.[1]||1;
+  el.innerHTML=sorted.map(([lbl,val])=>`
     <div class="bar-item">
-      <div class="bar-label" title="${label}">${label}</div>
-      <div class="bar-track">
-        <div class="bar-fill" style="width:${(val/max*100).toFixed(1)}%;background:linear-gradient(90deg,#ff8c00,#ffd70088)"></div>
-      </div>
-      <div class="bar-val" style="color:#ff8c00">${fmtN(val)} шт</div>
-    </div>`
-  ).join('');
+      <div class="bar-label" title="${lbl}">${lbl}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(val/max*100).toFixed(1)}%;background:linear-gradient(90deg,var(--orange),var(--yellow)55)"></div></div>
+      <div class="bar-val" style="color:var(--orange)">${fmtN(val)} pcs</div>
+    </div>`).join('');
 }
 
 function buildFilters(){
-  const items = [...new Set(rawData.map(r=>r.item))].sort();
-  const dates = [...new Set(rawData.map(r=>r.date).filter(Boolean))].sort().reverse();
-  const si = document.getElementById('tbl-item');
-  const sd = document.getElementById('tbl-date');
-  si.innerHTML = '<option value="">Все товары</option>' + items.map(i=>`<option>${i}</option>`).join('');
-  sd.innerHTML = '<option value="">Все даты</option>'  + dates.map(d=>`<option>${d}</option>`).join('');
+  const items=[...new Set(rawData.map(r=>r.item))].sort();
+  const dates=[...new Set(rawData.map(r=>r.date).filter(Boolean))].sort().reverse();
+  document.getElementById('tbl-item').innerHTML=
+    '<option value="">All items</option>'+items.map(i=>`<option>${i}</option>`).join('');
+  document.getElementById('tbl-date').innerHTML=
+    '<option value="">All dates</option>'+dates.map(d=>`<option>${d}</option>`).join('');
 }
 
 function applyFilters(){
-  const q    = document.getElementById('tbl-search').value.toLowerCase();
+  const q    = document.getElementById('tbl-q').value.toLowerCase();
   const item = document.getElementById('tbl-item').value;
   const date = document.getElementById('tbl-date').value;
+  const base = typeFilter==='all' ? rawData : rawData.filter(r=>r.type===typeFilter);
 
-  filtered = rawData.filter(r => {
-    if(item && r.item !== item) return false;
-    if(date && r.date !== date) return false;
+  filtered = base.filter(r=>{
+    if(item && r.item!==item) return false;
+    if(date && r.date!==date) return false;
     if(q && !r.nick.toLowerCase().includes(q) && !r.item.toLowerCase().includes(q)) return false;
     return true;
   });
 
-  // Sort
-  filtered.sort((a,b) => {
-    let av = a[sortCol], bv = b[sortCol];
-    if(typeof av === 'string') return av.localeCompare(bv) * sortDir;
-    return (av - bv) * sortDir;
+  filtered.sort((a,b)=>{
+    let av=a[sortCol], bv=b[sortCol];
+    if(typeof av==='string') return av.localeCompare(bv)*sortDir;
+    return (av-bv)*sortDir;
   });
 
-  page = 0;
-  renderTable();
+  page=0; renderTable();
 }
 
 function renderTable(){
-  document.getElementById('tbl-count').textContent = `${filtered.length} записей`;
-  const start = page * PER_PAGE;
-  const rows  = filtered.slice(start, start + PER_PAGE);
+  document.getElementById('tbl-count').textContent = filtered.length+' records';
+  const rows = filtered.slice(page*PER, (page+1)*PER);
 
   if(!rows.length){
-    document.getElementById('tbl-wrap').innerHTML = `
-      <div class="no-data"><div class="nd-title">NO RESULTS</div><div>Нет данных по фильтру</div></div>`;
-    document.getElementById('pagination').innerHTML = '';
+    document.getElementById('tbl-wrap').innerHTML=
+      '<div class="no-data"><div class="nd-t">NO RESULTS</div></div>';
+    document.getElementById('pagination').innerHTML='';
     return;
   }
 
-  const cols = [
-    { key:'date',  label:'Дата',   cls:'date'  },
-    { key:'time',  label:'Время',  cls:'time'  },
-    { key:'nick',  label:'Ник',    cls:'nick'  },
-    { key:'item',  label:'Товар',  cls:'item'  },
-    { key:'qty',   label:'Кол-во', cls:'qty'   },
-    { key:'price', label:'Сумма $',  cls:'price' },
-    { key:'_ppu',  label:'За шт $', cls:'price' },
+  const cols=[
+    {key:'date', label:'Date'}, {key:'time', label:'Time'},
+    {key:'type', label:'Type'}, {key:'nick', label:'Nick'},
+    {key:'item', label:'Item'}, {key:'qty',  label:'Qty'},
+    {key:'price',label:'Total $'},{key:'_ppu',label:'Per unit'},
   ];
 
-  document.getElementById('tbl-wrap').innerHTML = `
+  document.getElementById('tbl-wrap').innerHTML=`
     <table>
       <thead><tr>${cols.map(c=>`
         <th class="${sortCol===c.key?'sorted':''}" onclick="setSort('${c.key}')">
@@ -827,51 +807,44 @@ function renderTable(){
         <tr>
           <td class="date">${r.date||''}</td>
           <td class="time">${r.time||''}</td>
+          <td class="type-${r.type}">${r.type==='buy'?'▲ BUY':'▼ SELL'}</td>
           <td class="nick">${r.nick}</td>
           <td class="item">${r.item}</td>
           <td class="qty">${fmtN(r.qty)}</td>
           <td class="price">${fmt$(r.price)}</td>
-          <td class="price" style="color:var(--dim)">${fmt$(r.qty > 0 ? Math.round(r.price/r.qty) : 0)}</td>
+          <td class="ppu">${fmt$(r.qty>0?Math.round(r.price/r.qty):0)}</td>
         </tr>`).join('')}
       </tbody>
     </table>`;
 
-  // Pagination
-  const pages = Math.ceil(filtered.length / PER_PAGE);
-  let pg = '';
-  pg += `<button class="pg-btn" onclick="goPage(${page-1})" ${page===0?'disabled':''}>← PREV</button>`;
-  const lo = Math.max(0, page-2), hi = Math.min(pages-1, page+2);
-  for(let i=lo;i<=hi;i++){
-    pg += `<button class="pg-btn${i===page?' active':''}" onclick="goPage(${i})">${i+1}</button>`;
-  }
-  pg += `<button class="pg-btn" onclick="goPage(${page+1})" ${page>=pages-1?'disabled':''}>NEXT →</button>`;
-  document.getElementById('pagination').innerHTML = pg;
+  const pages=Math.ceil(filtered.length/PER);
+  let pg=`<button class="pg-btn" onclick="goPage(${page-1})" ${page===0?'disabled':''}>← PREV</button>`;
+  const lo=Math.max(0,page-2), hi=Math.min(pages-1,page+2);
+  for(let i=lo;i<=hi;i++)
+    pg+=`<button class="pg-btn${i===page?' active':''}" onclick="goPage(${i})">${i+1}</button>`;
+  pg+=`<button class="pg-btn" onclick="goPage(${page+1})" ${page>=pages-1?'disabled':''}>NEXT →</button>`;
+  document.getElementById('pagination').innerHTML=pg;
 }
 
 function setSort(col){
-  if(sortCol === col) sortDir *= -1;
-  else { sortCol = col; sortDir = -1; }
+  if(sortCol===col) sortDir*=-1; else{sortCol=col;sortDir=-1;}
   renderTable();
 }
 function goPage(p){
-  const pages = Math.ceil(filtered.length / PER_PAGE);
-  if(p < 0 || p >= pages) return;
-  page = p;
+  const pages=Math.ceil(filtered.length/PER);
+  if(p<0||p>=pages) return;
+  page=p;
   renderTable();
-  document.querySelector('.table-panel').scrollIntoView({ behavior:'smooth', block:'start' });
+  document.querySelector('.table-panel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-document.getElementById('tbl-search').addEventListener('input', applyFilters);
+document.getElementById('tbl-q').addEventListener('input', applyFilters);
 document.getElementById('tbl-item').addEventListener('change', applyFilters);
 document.getElementById('tbl-date').addEventListener('change', applyFilters);
 
-// ======================== INIT ========================
-if(cfg.gistId){
-  loadData();
-  startRefreshCycle();
-} else {
-  hideLoading();
-}
+// ── Init ──
+loadData();
+startRefresh();
 </script>
 </body>
 </html>
