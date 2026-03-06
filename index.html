@@ -643,7 +643,7 @@ function fmtN(n){ return n.toLocaleString('ru'); }
 
 function buildStats(){
   const total   = rawData.length;
-  const revenue = rawData.reduce((s,r) => s + r.price*r.qty, 0);
+  const revenue = rawData.reduce((s,r) => s + r.price, 0);
   const items   = new Set(rawData.map(r=>r.item)).size;
   const buyers  = new Set(rawData.map(r=>r.nick)).size;
   const dates   = rawData.map(r=>r.date).filter(Boolean).sort();
@@ -660,7 +660,7 @@ function buildDailyChart(){
   const byDay = {};
   rawData.forEach(r => {
     const d = r.date || 'unknown';
-    byDay[d] = (byDay[d] || 0) + r.price * r.qty;
+    byDay[d] = (byDay[d] || 0) + r.price;
   });
   const labels = Object.keys(byDay).sort();
   const values = labels.map(l => byDay[l]);
@@ -694,7 +694,7 @@ function buildDailyChart(){
 function buildItemsChart(){
   const byItem = {};
   rawData.forEach(r => {
-    byItem[r.item] = (byItem[r.item] || 0) + r.price * r.qty;
+    byItem[r.item] = (byItem[r.item] || 0) + r.price;
   });
   const sorted = Object.entries(byItem).sort((a,b)=>b[1]-a[1]).slice(0,10);
 
@@ -741,7 +741,7 @@ function buildBars(containerId, data, color){
 
 function buildBuyersBars(){
   const byBuyer = {};
-  rawData.forEach(r => { byBuyer[r.nick] = (byBuyer[r.nick]||0) + r.price*r.qty; });
+  rawData.forEach(r => { byBuyer[r.nick] = (byBuyer[r.nick]||0) + r.price; });
   const sorted = Object.entries(byBuyer).sort((a,b)=>b[1]-a[1]).slice(0,12);
   buildBars('buyers-bars', sorted, '#00d4ff');
 }
@@ -813,7 +813,8 @@ function renderTable(){
     { key:'nick',  label:'Ник',    cls:'nick'  },
     { key:'item',  label:'Товар',  cls:'item'  },
     { key:'qty',   label:'Кол-во', cls:'qty'   },
-    { key:'price', label:'Цена $', cls:'price' },
+    { key:'price', label:'Сумма $',  cls:'price' },
+    { key:'_ppu',  label:'За шт $', cls:'price' },
   ];
 
   document.getElementById('tbl-wrap').innerHTML = `
@@ -830,6 +831,7 @@ function renderTable(){
           <td class="item">${r.item}</td>
           <td class="qty">${fmtN(r.qty)}</td>
           <td class="price">${fmt$(r.price)}</td>
+          <td class="price" style="color:var(--dim)">${fmt$(r.qty > 0 ? Math.round(r.price/r.qty) : 0)}</td>
         </tr>`).join('')}
       </tbody>
     </table>`;
