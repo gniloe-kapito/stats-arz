@@ -539,8 +539,10 @@
 <script>
 // ======================== CONFIG ========================
 const CFG_KEY = 'shopmon_cfg';
-let cfg = { gistId: '', refresh: 60 };
+let cfg = { gistId: 'd8e785e0517eb5781dfab054d861dc8f', refresh: 60 };
 try { cfg = Object.assign(cfg, JSON.parse(localStorage.getItem(CFG_KEY) || '{}')); } catch(e){}
+// Всегда используем этот Gist
+cfg.gistId = 'd8e785e0517eb5781dfab054d861dc8f';
 
 let rawData    = [];
 let filtered   = [];
@@ -861,7 +863,6 @@ if(cfg.gistId){
   startRefreshCycle();
 } else {
   hideLoading();
-  openModal(); // сразу открываем конфиг при первом заходе
 }
 </script>
 </body>
