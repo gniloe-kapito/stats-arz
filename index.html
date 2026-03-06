@@ -578,6 +578,37 @@ document.getElementById('config-modal').addEventListener('click', e => {
 });
 
 // ======================== LOAD ========================
+// Fix mojibake: CP1251 bytes were misread as UTF-8 latin1.
+// We re-encode each char back to its original byte then decode as CP1251.
+function fixMojibake(str) {
+  try {
+    // Try to detect if it actually looks like mojibake:
+    // mojibake from cp1251-as-latin1 has chars like Р С† etc (U+0420, U+0421...)
+    // Real UTF-8 cyrillic is fine already.
+    // Strategy: encode back to bytes using latin1 mapping, then decode as cp1251.
+    const bytes = new Uint8Array(str.length);
+    for (let i = 0; i < str.length; i++) {
+      bytes[i] = str.charCodeAt(i) & 0xFF;
+    }
+    const decoded = new TextDecoder('windows-1251').decode(bytes);
+    // Sanity check: if result has normal cyrillic (U+0400–U+04FF) it worked
+    if (/[\u0400-\u04FF]/.test(decoded)) return decoded;
+    return str; // already fine
+  } catch(e) {
+    return str;
+  }
+}
+
+function fixRecord(r) {
+  return {
+    ...r,
+    item: fixMojibake(r.item || ''),
+    nick: fixMojibake(r.nick || ''),
+    date: r.date || '',
+    time: r.time || '',
+  };
+}
+
 async function loadData(){
   if(!cfg.gistId){ hideLoading(); setStatus('error','NO GIST ID'); return; }
   setStatus('live','LOADING...');
@@ -590,14 +621,18 @@ async function loadData(){
     const file = gist.files['shop_history.json'];
     if(!file) throw new Error('shop_history.json not found in gist');
 
-    // Если контент truncated — запрашиваем raw
-    let jsonText = file.content;
+    let jsonText;
     if(file.truncated){
+      // Fetch raw as ArrayBuffer and decode as windows-1251 directly
       const raw = await fetch(file.raw_url);
-      jsonText = await raw.text();
+      const buf = await raw.arrayBuffer();
+      jsonText = new TextDecoder('windows-1251').decode(buf);
+    } else {
+      jsonText = file.content;
     }
 
-    rawData = JSON.parse(jsonText);
+    const parsed = JSON.parse(jsonText);
+    rawData = parsed.map(fixRecord);
     setStatus('live', `OK · ${rawData.length} записей`);
     renderAll();
   } catch(e){
