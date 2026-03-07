@@ -299,9 +299,117 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
 }
 @keyframes ldmove { to { left:100%; } }
 
-@media(max-width:900px){
-  .charts-grid,.bottom-grid,.split-inner { grid-template-columns:1fr; }
-  main { padding:14px; }
+/* ══════════════ MOBILE ══════════════ */
+@media(max-width:700px){
+
+  /* Header */
+  header { padding:10px 14px; }
+  .logo  { font-size:14px; letter-spacing:2px; }
+  #status-text { display:none; }
+  .cfg-btn { padding:5px 9px; font-size:10px; }
+
+  /* Main padding */
+  main { padding:10px 10px 80px; }
+
+  /* Tabs */
+  .type-tabs { width:100%; }
+  .tab { flex:1; text-align:center; padding:10px 6px; font-size:11px; }
+
+  /* Stat cards: 2 columns */
+  .stat-row { grid-template-columns: 1fr 1fr; gap:8px; }
+  .sc-val    { font-size:20px; }
+  .sc-label  { font-size:9px; }
+
+  /* All grids → single column */
+  .charts-grid,
+  .bottom-grid,
+  .split-inner { grid-template-columns:1fr !important; }
+
+  /* Charts smaller on mobile */
+  canvas { max-height:200px; }
+
+  /* Chart.js doughnut legend → bottom */
+  /* (handled via chartOptions) */
+
+  /* Bar labels shorter */
+  .bar-label { width:90px; font-size:10px; }
+  .bar-val   { width:70px; font-size:10px; }
+
+  /* Table → card list on mobile */
+  .table-desktop { display:none; }
+  .table-cards   { display:block; }
+
+  /* Table controls */
+  .table-controls { flex-direction:column; gap:7px; }
+  .srch  { width:100%; }
+  .fsel  { width:100%; }
+  #tbl-count { margin-left:0; }
+
+  /* Pagination compact */
+  .pg-btn { padding:6px 10px; font-size:11px; }
+
+  /* Modal full-width */
+  .mbox { width:95vw; padding:20px 16px; }
+
+  /* Split panel */
+  .split-panel { padding:12px; }
+
+  /* Panel padding */
+  .chart-panel,
+  .table-panel { padding:12px; }
+
+  /* Bottom nav bar */
+  #mobile-nav { display:flex; }
+}
+
+@media(min-width:701px){
+  .table-cards { display:none; }
+  .table-desktop { display:block; }
+  #mobile-nav { display:none; }
+  .charts-grid,.bottom-grid,.split-inner { grid-template-columns: unset; }
+}
+
+/* Mobile bottom navigation */
+#mobile-nav {
+  position:fixed; bottom:0; left:0; right:0; z-index:100;
+  background:rgba(5,13,10,0.95);
+  border-top:1px solid var(--border);
+  backdrop-filter:blur(12px);
+  justify-content:space-around;
+  align-items:center;
+  padding:6px 0 10px;
+  display:none;
+}
+.mnav-btn {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  background:transparent; border:none; cursor:pointer;
+  color:var(--dim); font-family:var(--mono); font-size:9px;
+  letter-spacing:1px; padding:4px 12px; transition:color .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.mnav-btn.active { color:var(--green); }
+.mnav-btn svg { width:18px; height:18px; }
+
+/* Mobile card layout for table */
+.table-cards { margin-top:4px; }
+.tx-card {
+  background:var(--bg); border:1px solid var(--border);
+  padding:10px 12px; margin-bottom:7px; position:relative;
+}
+.tx-card-top {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:5px;
+}
+.tx-card-nick { color:var(--cyan); font-size:12px; }
+.tx-card-type-buy  { color:var(--buy);  font-size:10px; letter-spacing:1px; }
+.tx-card-type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
+.tx-card-item  { color:var(--text); font-size:12px; margin-bottom:4px; }
+.tx-card-row   { display:flex; justify-content:space-between; margin-top:3px; }
+.tx-card-price { color:var(--green); font-family:var(--head); font-size:15px; font-weight:700; }
+.tx-card-meta  { color:var(--dim); font-size:10px; text-align:right; }
+
+/* Sections for mobile nav scroll targets */
+.section-anchor { scroll-margin-top:60px; }
 }
 </style>
 </head>
@@ -351,7 +459,7 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
   </div>
 
   <!-- STAT CARDS -->
-  <div class="stat-row">
+  <div class="stat-row section-anchor">
     <div class="stat-card sc-green">
       <div class="sc-label">TOTAL RECORDS</div>
       <div class="sc-val" id="s-total">—</div>
@@ -391,7 +499,7 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
   </div>
 
   <!-- DAILY CHART + PIE -->
-  <div class="charts-grid">
+  <div class="charts-grid section-anchor">
     <div class="chart-panel">
       <div class="panel-title">Оборот по дням ($)</div>
       <canvas id="chart-daily" height="160"></canvas>
@@ -418,7 +526,7 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
   </div>
 
   <!-- TOP BUYERS + SELLERS + QTY -->
-  <div class="bottom-grid" style="grid-template-columns:1fr 1fr">
+  <div class="bottom-grid section-anchor" style="grid-template-columns:1fr 1fr">
     <div class="chart-panel">
       <div class="panel-title" style="color:var(--buy)">Топ покупателей ($)</div>
       <div id="bars-buyers"></div>
@@ -440,7 +548,7 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
   </div>
 
   <!-- TABLE -->
-  <div class="table-panel">
+  <div class="table-panel section-anchor">
     <div class="panel-title">Все транзакции</div>
     <div class="table-controls">
       <input class="srch" id="tbl-q"    placeholder="Поиск по нику / товару...">
@@ -448,10 +556,16 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
       <select class="fsel" id="tbl-date"><option value="">Все даты</option></select>
       <span id="tbl-count"></span>
     </div>
-    <div id="tbl-wrap">
-      <div class="no-data"><div class="nd-t">НЕТ ДАННЫХ</div><div>Укажи Gist ID в конфиге</div></div>
+    <div class="table-desktop">
+      <div id="tbl-wrap">
+        <div class="no-data"><div class="nd-t">НЕТ ДАННЫХ</div><div>Укажи Gist ID в конфиге</div></div>
+      </div>
+      <div class="pagination" id="pagination"></div>
     </div>
-    <div class="pagination" id="pagination"></div>
+    <div class="table-cards" id="tbl-cards">
+      <div class="no-data"><div class="nd-t">НЕТ ДАННЫХ</div></div>
+    </div>
+    <div class="pagination table-cards" id="pagination-mob"></div>
   </div>
 
 </main>
@@ -698,7 +812,10 @@ function buildItemsChart(){
     options:{
       responsive:true,
       plugins:{
-        legend:{position:'right',labels:{color:'#7abfa0',font:{family:'Share Tech Mono',size:10},boxWidth:10}},
+        legend:{
+          position: window.innerWidth<=700 ? 'bottom' : 'right',
+          labels:{color:'#7abfa0',font:{family:'Share Tech Mono',size:10},boxWidth:10}
+        },
         tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt$(c.raw)}`}}
       }
     }
@@ -814,24 +931,37 @@ function applyFilters(){
   page=0; renderTable();
 }
 
+function buildPagination(containerId, pages){
+  let pg=`<button class="pg-btn" onclick="goPage(${page-1})" ${page===0?'disabled':''}>← НАЗАД</button>`;
+  const lo=Math.max(0,page-2), hi=Math.min(pages-1,page+2);
+  for(let i=lo;i<=hi;i++)
+    pg+=`<button class="pg-btn${i===page?' active':''}" onclick="goPage(${i})">${i+1}</button>`;
+  pg+=`<button class="pg-btn" onclick="goPage(${page+1})" ${page>=pages-1?'disabled':''}>ВПЕРЁД →</button>`;
+  document.getElementById(containerId).innerHTML=pg;
+}
+
 function renderTable(){
   document.getElementById('tbl-count').textContent = filtered.length+' записей';
   const rows = filtered.slice(page*PER, (page+1)*PER);
+  const pages = Math.ceil(filtered.length/PER);
 
   if(!rows.length){
     document.getElementById('tbl-wrap').innerHTML=
       '<div class="no-data"><div class="nd-t">НЕТ РЕЗУЛЬТАТОВ</div></div>';
+    document.getElementById('tbl-cards').innerHTML=
+      '<div class="no-data"><div class="nd-t">НЕТ РЕЗУЛЬТАТОВ</div></div>';
     document.getElementById('pagination').innerHTML='';
+    document.getElementById('pagination-mob').innerHTML='';
     return;
   }
 
+  // ── Desktop table ──
   const cols=[
     {key:'date', label:'Дата'}, {key:'time', label:'Время'},
     {key:'type', label:'Тип'}, {key:'nick', label:'Ник'},
     {key:'item', label:'Товар'}, {key:'qty',  label:'Кол-во'},
     {key:'price',label:'Сумма $'},{key:'_ppu',label:'За шт $'},
   ];
-
   document.getElementById('tbl-wrap').innerHTML=`
     <table>
       <thead><tr>${cols.map(c=>`
@@ -851,14 +981,25 @@ function renderTable(){
         </tr>`).join('')}
       </tbody>
     </table>`;
+  buildPagination('pagination', pages);
 
-  const pages=Math.ceil(filtered.length/PER);
-  let pg=`<button class="pg-btn" onclick="goPage(${page-1})" ${page===0?'disabled':''}>← НАЗАД</button>`;
-  const lo=Math.max(0,page-2), hi=Math.min(pages-1,page+2);
-  for(let i=lo;i<=hi;i++)
-    pg+=`<button class="pg-btn${i===page?' active':''}" onclick="goPage(${i})">${i+1}</button>`;
-  pg+=`<button class="pg-btn" onclick="goPage(${page+1})" ${page>=pages-1?'disabled':''}>ВПЕРЁД →</button>`;
-  document.getElementById('pagination').innerHTML=pg;
+  // ── Mobile cards ──
+  document.getElementById('tbl-cards').innerHTML = rows.map(r=>`
+    <div class="tx-card">
+      <div class="tx-card-top">
+        <span class="tx-card-nick">${r.nick}</span>
+        <span class="tx-card-type-${r.type}">${r.type==='buy'?'▲ КУПЛЯ':'▼ ПРОДАЖА'}</span>
+      </div>
+      <div class="tx-card-item">${r.item}</div>
+      <div class="tx-card-row">
+        <span class="tx-card-price">${fmt$(r.price)}</span>
+        <span class="tx-card-meta">
+          ${r.qty} шт · ${fmt$(r.qty>0?Math.round(r.price/r.qty):0)}/шт<br>
+          ${r.date||''} ${r.time||''}
+        </span>
+      </div>
+    </div>`).join('');
+  buildPagination('pagination-mob', pages);
 }
 
 function setSort(col){
@@ -871,6 +1012,10 @@ function goPage(p){
   page=p;
   renderTable();
   document.querySelector('.table-panel').scrollIntoView({behavior:'smooth',block:'start'});
+  // update mobile nav active state
+  document.querySelectorAll('.mnav-btn').forEach(b=>b.classList.remove('active'));
+  const nb=document.getElementById('mnav-table');
+  if(nb) nb.classList.add('active');
 }
 
 document.getElementById('tbl-q').addEventListener('input', applyFilters);
@@ -880,6 +1025,55 @@ document.getElementById('tbl-date').addEventListener('change', applyFilters);
 // ── Init ──
 loadData();
 startRefresh();
+
+// ── Mobile nav scroll ──
+function mnavGo(section){
+  document.querySelectorAll('.mnav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('mnav-'+section).classList.add('active');
+  const targets={
+    stats:   document.querySelector('.stat-row'),
+    charts:  document.querySelector('.charts-grid'),
+    players: document.querySelector('.bottom-grid'),
+    table:   document.querySelector('.table-panel'),
+  };
+  const el = targets[section];
+  if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+}
 </script>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav id="mobile-nav">
+  <button class="mnav-btn active" id="mnav-stats" onclick="mnavGo('stats')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/>
+      <rect x="17" y="3" width="4" height="18"/>
+    </svg>
+    СТАТА
+  </button>
+  <button class="mnav-btn" id="mnav-charts" onclick="mnavGo('charts')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
+    ГРАФИКИ
+  </button>
+  <button class="mnav-btn" id="mnav-players" onclick="mnavGo('players')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+    ИГРОКИ
+  </button>
+  <button class="mnav-btn" id="mnav-table" onclick="mnavGo('table')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+      <line x1="8" y1="18" x2="21" y2="18"/>
+      <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+      <line x1="3" y1="18" x2="3.01" y2="18"/>
+    </svg>
+    ТАБЛИЦА
+  </button>
+</nav>
+
 </body>
 </html>
