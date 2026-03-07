@@ -761,16 +761,17 @@ function buildBuyersBars(){
 }
 
 function buildQtyBars(){
-  function makeQtyBars(containerId, data, color){
+  function makeQtyBars(containerId, data, colorSolid, colorFade){
     const el=document.getElementById(containerId);
     if(!el) return;
     const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]).slice(0,12);
-    const max=sorted[0]?.[1]||1;
+    if(!sorted.length){ el.innerHTML='<div style="color:#1a4a30;font-size:11px;padding:8px">Нет данных</div>'; return; }
+    const max=sorted[0][1]||1;
     el.innerHTML=sorted.map(([lbl,val])=>`
       <div class="bar-item">
         <div class="bar-label" title="${lbl}">${lbl}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${(val/max*100).toFixed(1)}%;background:linear-gradient(90deg,${color},${color}55)"></div></div>
-        <div class="bar-val" style="color:${color}">${fmtN(val)} шт</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(val/max*100).toFixed(1)}%;background:linear-gradient(90deg,${colorSolid},${colorFade})"></div></div>
+        <div class="bar-val" style="color:${colorSolid}">${fmtN(val)} шт</div>
       </div>`).join('');
   }
   const byBuy={}, bySell={};
@@ -778,8 +779,8 @@ function buildQtyBars(){
     if(r.type==='buy')  byBuy[r.item] =(byBuy[r.item] ||0)+r.qty;
     if(r.type==='sell') bySell[r.item]=(bySell[r.item]||0)+r.qty;
   });
-  makeQtyBars('bars-qty-buy',  byBuy,  'var(--buy)');
-  makeQtyBars('bars-qty-sell', bySell, 'var(--sell)');
+  makeQtyBars('bars-qty-buy',  byBuy,  '#00ff88', '#00ff8833');
+  makeQtyBars('bars-qty-sell', bySell, '#ff4466', '#ff446633');
 }
 
 function buildFilters(){
