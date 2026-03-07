@@ -498,11 +498,15 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
     </div>
   </div>
 
-  <!-- DAILY CHART + PIE -->
-  <div class="charts-grid section-anchor">
+  <!-- DAILY CHARTS + PIE -->
+  <div class="charts-grid section-anchor" style="grid-template-columns:1fr 1fr 1fr">
     <div class="chart-panel">
-      <div class="panel-title">Оборот по дням ($)</div>
-      <canvas id="chart-daily" height="160"></canvas>
+      <div class="panel-title" style="color:var(--buy)">▲ Покупки по дням ($)</div>
+      <canvas id="chart-daily-buy" height="160"></canvas>
+    </div>
+    <div class="chart-panel">
+      <div class="panel-title" style="color:var(--sell)">▼ Продажи по дням ($)</div>
+      <canvas id="chart-daily-sell" height="160"></canvas>
     </div>
     <div class="chart-panel">
       <div class="panel-title">Топ товаров по выручке</div>
@@ -645,7 +649,7 @@ let typeFilter = 'all';
 let sortCol = 'date', sortDir = -1;
 let page = 0;
 const PER = 50;
-let chartDaily = null, chartItems = null;
+let chartDailyBuy = null, chartDailySell = null, chartItems = null;
 let refreshTimer = null;
 
 // ── Modal ──
@@ -769,29 +773,37 @@ function buildStats(){
 }
 
 function buildDailyChart(){
-  const d = visibleData();
-  const byDay={};
-  d.forEach(r=>{ const k=r.date||'?'; byDay[k]=(byDay[k]||0)+r.price; });
-  const labels=Object.keys(byDay).sort();
-  const vals=labels.map(l=>byDay[l]);
-  const color = typeFilter==='sell' ? '#ff4466' : typeFilter==='buy' ? '#00ff88' : '#00d4aa';
-  const ctx=document.getElementById('chart-daily').getContext('2d');
-  if(chartDaily) chartDaily.destroy();
-  chartDaily=new Chart(ctx,{
-    type:'bar',
-    data:{ labels, datasets:[{
-      data:vals, backgroundColor:color+'33', borderColor:color,
-      borderWidth:1, borderRadius:2
-    }]},
-    options:{
-      responsive:true,
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{ticks:{color:'#1a4a30',font:{family:'Share Tech Mono',size:10}},grid:{color:'rgba(15,42,30,.5)'}},
-        y:{ticks:{color:'#1a4a30',font:{family:'Share Tech Mono',size:10},callback:v=>fmt$(v)},grid:{color:'rgba(15,42,30,.5)'}}
+  function makeBarChart(canvasId, data, color, chartRef){
+    // collect all dates from rawData for consistent x-axis
+    const allDates=[...new Set(rawData.map(r=>r.date||'?'))].sort();
+    const vals=allDates.map(d=>data[d]||0);
+    const ctx=document.getElementById(canvasId);
+    if(!ctx) return null;
+    if(chartRef) chartRef.destroy();
+    return new Chart(ctx.getContext('2d'),{
+      type:'bar',
+      data:{ labels:allDates, datasets:[{
+        data:vals, backgroundColor:color+'33', borderColor:color,
+        borderWidth:1, borderRadius:2
+      }]},
+      options:{
+        responsive:true,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{ticks:{color:'#1a4a30',font:{family:'Share Tech Mono',size:9},maxRotation:45},grid:{color:'rgba(15,42,30,.5)'}},
+          y:{ticks:{color:'#1a4a30',font:{family:'Share Tech Mono',size:9},callback:v=>fmt$(v)},grid:{color:'rgba(15,42,30,.5)'}}
+        }
       }
-    }
+    });
+  }
+  const byBuy={}, bySell={};
+  rawData.forEach(r=>{
+    const k=r.date||'?';
+    if(r.type==='buy')  byBuy[k] =(byBuy[k] ||0)+r.price;
+    if(r.type==='sell') bySell[k]=(bySell[k]||0)+r.price;
   });
+  chartDailyBuy  = makeBarChart('chart-daily-buy',  byBuy,  '#00ff88', chartDailyBuy);
+  chartDailySell = makeBarChart('chart-daily-sell', bySell, '#ff4466', chartDailySell);
 }
 
 function buildItemsChart(){
