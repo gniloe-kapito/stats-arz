@@ -25,47 +25,6 @@
 
 * { margin:0; padding:0; box-sizing:border-box; }
 
-
-
-/* 
-  
-    ----------------  ----------------  ----------------  ----------------  ----------------  ----------------  ----------------  ----------------  ----------------  ----------------  ----------------
-  добавить в луа проверку на повторки
-  поменять sell и buy местами
-  поменять язык сайта на русский кроме верхней части (исключение 
-TOTAL RECORDS
-220
-transactions
-TOTAL REVENUE
-$424 799 328
-$ turnover
-PURCHASES 0%
-2
-$20 bought
-SALES 100%
-218
-$424 799 308 sold
-UNIQUE ITEMS
-16
-item types
-LAST UPDATE
-2026-03-06
-latest record
-)
-
-  мобильную версию) куда без неё
-
-  Top buyers ($)Top items by qty добавить к ним Top sell ($)Top items by qty sell/buy
-
-  ----------------  ----------------  ----------------  ----------------  ----------------  ----------------  ----------------  ----------------  ----------------
-  
-  
-  
-  
-  
-  */
-
-  
 body {
   background: var(--bg);
   color: var(--text);
@@ -434,53 +393,63 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
   <!-- DAILY CHART + PIE -->
   <div class="charts-grid">
     <div class="chart-panel">
-      <div class="panel-title">Daily turnover ($)</div>
+      <div class="panel-title">Оборот по дням ($)</div>
       <canvas id="chart-daily" height="160"></canvas>
     </div>
     <div class="chart-panel">
-      <div class="panel-title">Top items by revenue</div>
+      <div class="panel-title">Топ товаров по выручке</div>
       <canvas id="chart-items" height="160"></canvas>
     </div>
   </div>
 
   <!-- BUY / SELL SPLIT -->
   <div class="split-panel">
-    <div class="panel-title" style="margin-bottom:16px">Buy / Sell breakdown by item</div>
+    <div class="panel-title" style="margin-bottom:16px">Покупки / Продажи по товарам</div>
     <div class="split-inner">
       <div>
-        <div class="split-side-label lbl-buy">▲ PURCHASES</div>
+        <div class="split-side-label lbl-buy">▲ ПОКУПКИ</div>
         <div id="bars-buy"></div>
       </div>
       <div>
-        <div class="split-side-label lbl-sell">▼ SALES</div>
+        <div class="split-side-label lbl-sell">▼ ПРОДАЖИ</div>
         <div id="bars-sell"></div>
       </div>
     </div>
   </div>
 
-  <!-- TOP BUYERS -->
-  <div class="bottom-grid">
+  <!-- TOP BUYERS + SELLERS + QTY -->
+  <div class="bottom-grid" style="grid-template-columns:1fr 1fr">
     <div class="chart-panel">
-      <div class="panel-title">Top buyers ($)</div>
+      <div class="panel-title" style="color:var(--buy)">Топ покупателей ($)</div>
       <div id="bars-buyers"></div>
     </div>
     <div class="chart-panel">
-      <div class="panel-title">Top items by qty</div>
-      <div id="bars-qty"></div>
+      <div class="panel-title" style="color:var(--sell)">Топ продавцов ($)</div>
+      <div id="bars-sellers"></div>
+    </div>
+  </div>
+  <div class="bottom-grid" style="grid-template-columns:1fr 1fr;margin-top:12px">
+    <div class="chart-panel">
+      <div class="panel-title" style="color:var(--buy)">Топ товаров по кол-ву (покупки)</div>
+      <div id="bars-qty-buy"></div>
+    </div>
+    <div class="chart-panel">
+      <div class="panel-title" style="color:var(--sell)">Топ товаров по кол-ву (продажи)</div>
+      <div id="bars-qty-sell"></div>
     </div>
   </div>
 
   <!-- TABLE -->
   <div class="table-panel">
-    <div class="panel-title">All transactions</div>
+    <div class="panel-title">Все транзакции</div>
     <div class="table-controls">
-      <input class="srch" id="tbl-q"    placeholder="Nick / item search...">
-      <select class="fsel" id="tbl-item"><option value="">All items</option></select>
-      <select class="fsel" id="tbl-date"><option value="">All dates</option></select>
+      <input class="srch" id="tbl-q"    placeholder="Поиск по нику / товару...">
+      <select class="fsel" id="tbl-item"><option value="">Все товары</option></select>
+      <select class="fsel" id="tbl-date"><option value="">Все даты</option></select>
       <span id="tbl-count"></span>
     </div>
     <div id="tbl-wrap">
-      <div class="no-data"><div class="nd-t">NO DATA</div><div>Set Gist ID in config</div></div>
+      <div class="no-data"><div class="nd-t">НЕТ ДАННЫХ</div><div>Укажи Gist ID в конфиге</div></div>
     </div>
     <div class="pagination" id="pagination"></div>
   </div>
@@ -611,7 +580,7 @@ async function loadData(){
     rawData = JSON.parse(jsonText);
     // Ensure type field exists (backward compat)
     rawData.forEach(r=>{ if(!r.type) r.type='buy'; });
-    setStatus('live', `OK · ${rawData.length} records`);
+    setStatus('live', `OK · ${rawData.length} записей`);
     renderAll();
   } catch(e){
     setStatus('error','ERR: '+e.message);
@@ -675,9 +644,9 @@ function buildStats(){
   document.getElementById('s-total').textContent   = fmtN(d.length);
   document.getElementById('s-revenue').textContent = fmt$(d.reduce((s,r)=>s+r.price,0));
   document.getElementById('s-buy').textContent     = fmtN(buyRecs.length);
-  document.getElementById('s-buy-sum').textContent = fmt$(buySum)+' bought';
+  document.getElementById('s-buy-sum').textContent = fmt$(buySum)+' куплено';
   document.getElementById('s-sell').textContent    = fmtN(sellRecs.length);
-  document.getElementById('s-sell-sum').textContent= fmt$(sellSum)+' sold';
+  document.getElementById('s-sell-sum').textContent= fmt$(sellSum)+' продано';
   document.getElementById('s-buy-pct').textContent = total>0 ? Math.round(buySum/total*100)+'%' : '';
   document.getElementById('s-sell-pct').textContent= total>0 ? Math.round(sellSum/total*100)+'%' : '';
   document.getElementById('s-items').textContent   = new Set(d.map(r=>r.item)).size;
@@ -760,42 +729,66 @@ function buildBuySellBars(){
 }
 
 function buildBuyersBars(){
-  const d=visibleData();
+  // Buyers (type=buy)
+  const buyData = rawData.filter(r=>r.type==='buy');
   const byBuyer={};
-  d.forEach(r=>{ byBuyer[r.nick]=(byBuyer[r.nick]||0)+r.price; });
-  const sorted=Object.entries(byBuyer).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  const el=document.getElementById('bars-buyers');
-  const max=sorted[0]?.[1]||1;
-  el.innerHTML=sorted.map(([lbl,val])=>`
+  buyData.forEach(r=>{ byBuyer[r.nick]=(byBuyer[r.nick]||0)+r.price; });
+  const sortedBuy=Object.entries(byBuyer).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const elBuy=document.getElementById('bars-buyers');
+  const maxBuy=sortedBuy[0]?.[1]||1;
+  elBuy.innerHTML=sortedBuy.map(([lbl,val])=>`
     <div class="bar-item">
       <div class="bar-label" title="${lbl}">${lbl}</div>
-      <div class="bar-track"><div class="bar-fill buy" style="width:${(val/max*100).toFixed(1)}%"></div></div>
+      <div class="bar-track"><div class="bar-fill buy" style="width:${(val/maxBuy*100).toFixed(1)}%"></div></div>
       <div class="bar-val buy">${fmt$(val)}</div>
     </div>`).join('');
+
+  // Sellers (type=sell)
+  const sellData = rawData.filter(r=>r.type==='sell');
+  const bySeller={};
+  sellData.forEach(r=>{ bySeller[r.nick]=(bySeller[r.nick]||0)+r.price; });
+  const sortedSell=Object.entries(bySeller).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const elSell=document.getElementById('bars-sellers');
+  if(elSell){
+    const maxSell=sortedSell[0]?.[1]||1;
+    elSell.innerHTML=sortedSell.map(([lbl,val])=>`
+      <div class="bar-item">
+        <div class="bar-label" title="${lbl}">${lbl}</div>
+        <div class="bar-track"><div class="bar-fill sell" style="width:${(val/maxSell*100).toFixed(1)}%"></div></div>
+        <div class="bar-val sell">${fmt$(val)}</div>
+      </div>`).join('');
+  }
 }
 
 function buildQtyBars(){
-  const d=visibleData();
-  const byItem={};
-  d.forEach(r=>{ byItem[r.item]=(byItem[r.item]||0)+r.qty; });
-  const sorted=Object.entries(byItem).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  const el=document.getElementById('bars-qty');
-  const max=sorted[0]?.[1]||1;
-  el.innerHTML=sorted.map(([lbl,val])=>`
-    <div class="bar-item">
-      <div class="bar-label" title="${lbl}">${lbl}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${(val/max*100).toFixed(1)}%;background:linear-gradient(90deg,var(--orange),var(--yellow)55)"></div></div>
-      <div class="bar-val" style="color:var(--orange)">${fmtN(val)} pcs</div>
-    </div>`).join('');
+  function makeQtyBars(containerId, data, color){
+    const el=document.getElementById(containerId);
+    if(!el) return;
+    const sorted=Object.entries(data).sort((a,b)=>b[1]-a[1]).slice(0,12);
+    const max=sorted[0]?.[1]||1;
+    el.innerHTML=sorted.map(([lbl,val])=>`
+      <div class="bar-item">
+        <div class="bar-label" title="${lbl}">${lbl}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(val/max*100).toFixed(1)}%;background:linear-gradient(90deg,${color},${color}55)"></div></div>
+        <div class="bar-val" style="color:${color}">${fmtN(val)} шт</div>
+      </div>`).join('');
+  }
+  const byBuy={}, bySell={};
+  rawData.forEach(r=>{
+    if(r.type==='buy')  byBuy[r.item] =(byBuy[r.item] ||0)+r.qty;
+    if(r.type==='sell') bySell[r.item]=(bySell[r.item]||0)+r.qty;
+  });
+  makeQtyBars('bars-qty-buy',  byBuy,  'var(--buy)');
+  makeQtyBars('bars-qty-sell', bySell, 'var(--sell)');
 }
 
 function buildFilters(){
   const items=[...new Set(rawData.map(r=>r.item))].sort();
   const dates=[...new Set(rawData.map(r=>r.date).filter(Boolean))].sort().reverse();
   document.getElementById('tbl-item').innerHTML=
-    '<option value="">All items</option>'+items.map(i=>`<option>${i}</option>`).join('');
+    '<option value="">Все товары</option>'+items.map(i=>`<option>${i}</option>`).join('');
   document.getElementById('tbl-date').innerHTML=
-    '<option value="">All dates</option>'+dates.map(d=>`<option>${d}</option>`).join('');
+    '<option value="">Все даты</option>'+dates.map(d=>`<option>${d}</option>`).join('');
 }
 
 function applyFilters(){
@@ -821,21 +814,21 @@ function applyFilters(){
 }
 
 function renderTable(){
-  document.getElementById('tbl-count').textContent = filtered.length+' records';
+  document.getElementById('tbl-count').textContent = filtered.length+' записей';
   const rows = filtered.slice(page*PER, (page+1)*PER);
 
   if(!rows.length){
     document.getElementById('tbl-wrap').innerHTML=
-      '<div class="no-data"><div class="nd-t">NO RESULTS</div></div>';
+      '<div class="no-data"><div class="nd-t">НЕТ РЕЗУЛЬТАТОВ</div></div>';
     document.getElementById('pagination').innerHTML='';
     return;
   }
 
   const cols=[
-    {key:'date', label:'Date'}, {key:'time', label:'Time'},
-    {key:'type', label:'Type'}, {key:'nick', label:'Nick'},
-    {key:'item', label:'Item'}, {key:'qty',  label:'Qty'},
-    {key:'price',label:'Total $'},{key:'_ppu',label:'Per unit'},
+    {key:'date', label:'Дата'}, {key:'time', label:'Время'},
+    {key:'type', label:'Тип'}, {key:'nick', label:'Ник'},
+    {key:'item', label:'Товар'}, {key:'qty',  label:'Кол-во'},
+    {key:'price',label:'Сумма $'},{key:'_ppu',label:'За шт $'},
   ];
 
   document.getElementById('tbl-wrap').innerHTML=`
@@ -848,7 +841,7 @@ function renderTable(){
         <tr>
           <td class="date">${r.date||''}</td>
           <td class="time">${r.time||''}</td>
-          <td class="type-${r.type}">${r.type==='buy'?'▲ BUY':'▼ SELL'}</td>
+          <td class="type-${r.type}">${r.type==='buy'?'▲ КУПЛЯ':'▼ ПРОДАЖА'}</td>
           <td class="nick">${r.nick}</td>
           <td class="item">${r.item}</td>
           <td class="qty">${fmtN(r.qty)}</td>
@@ -859,11 +852,11 @@ function renderTable(){
     </table>`;
 
   const pages=Math.ceil(filtered.length/PER);
-  let pg=`<button class="pg-btn" onclick="goPage(${page-1})" ${page===0?'disabled':''}>← PREV</button>`;
+  let pg=`<button class="pg-btn" onclick="goPage(${page-1})" ${page===0?'disabled':''}>← НАЗАД</button>`;
   const lo=Math.max(0,page-2), hi=Math.min(pages-1,page+2);
   for(let i=lo;i<=hi;i++)
     pg+=`<button class="pg-btn${i===page?' active':''}" onclick="goPage(${i})">${i+1}</button>`;
-  pg+=`<button class="pg-btn" onclick="goPage(${page+1})" ${page>=pages-1?'disabled':''}>NEXT →</button>`;
+  pg+=`<button class="pg-btn" onclick="goPage(${page+1})" ${page>=pages-1?'disabled':''}>ВПЕРЁД →</button>`;
   document.getElementById('pagination').innerHTML=pg;
 }
 
