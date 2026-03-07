@@ -454,8 +454,8 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
   <!-- TYPE FILTER TABS -->
   <div class="type-tabs">
     <button class="tab active-all" id="tab-all"  onclick="setTypeFilter('all')">ALL</button>
-    <button class="tab"            id="tab-buy"  onclick="setTypeFilter('buy')">▲ BUY</button>
     <button class="tab"            id="tab-sell" onclick="setTypeFilter('sell')">▼ SELL</button>
+    <button class="tab"            id="tab-buy"  onclick="setTypeFilter('buy')">▲ BUY</button>
   </div>
 
   <!-- STAT CARDS -->
@@ -470,14 +470,6 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
       <div class="sc-val" id="s-revenue">—</div>
       <div class="sc-sub">$ turnover</div>
     </div>
-    <div class="stat-card sc-buy" style="--accent:var(--buy)">
-      <div class="sc-label" style="position:relative">
-        PURCHASES
-        <span style="position:absolute;right:0;font-size:18px;color:var(--buy);font-family:var(--head)" id="s-buy-pct"></span>
-      </div>
-      <div class="sc-val" id="s-buy" style="color:var(--buy)">—</div>
-      <div class="sc-sub" id="s-buy-sum">$ bought</div>
-    </div>
     <div class="stat-card sc-sell">
       <div class="sc-label" style="position:relative">
         SALES
@@ -485,6 +477,14 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
       </div>
       <div class="sc-val" id="s-sell">—</div>
       <div class="sc-sub" id="s-sell-sum">$ sold</div>
+    </div>
+    <div class="stat-card sc-buy" style="--accent:var(--buy)">
+      <div class="sc-label" style="position:relative">
+        СКУПКА
+        <span style="position:absolute;right:0;font-size:18px;color:var(--buy);font-family:var(--head)" id="s-buy-pct"></span>
+      </div>
+      <div class="sc-val" id="s-buy" style="color:var(--buy)">—</div>
+      <div class="sc-sub" id="s-buy-sum">$ скуплено</div>
     </div>
     <div class="stat-card sc-orange">
       <div class="sc-label">UNIQUE ITEMS</div>
@@ -501,12 +501,12 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
   <!-- DAILY CHARTS + PIE -->
   <div class="charts-grid section-anchor" style="grid-template-columns:1fr 1fr 1fr">
     <div class="chart-panel">
-      <div class="panel-title" style="color:var(--buy)">▲ Покупки по дням ($)</div>
-      <canvas id="chart-daily-buy" height="160"></canvas>
-    </div>
-    <div class="chart-panel">
       <div class="panel-title" style="color:var(--sell)">▼ Продажи по дням ($)</div>
       <canvas id="chart-daily-sell" height="160"></canvas>
+    </div>
+    <div class="chart-panel">
+      <div class="panel-title" style="color:var(--buy)">▲ Скупка по дням ($)</div>
+      <canvas id="chart-daily-buy" height="160"></canvas>
     </div>
     <div class="chart-panel">
       <div class="panel-title">Топ товаров по выручке</div>
@@ -516,15 +516,15 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
 
   <!-- BUY / SELL SPLIT -->
   <div class="split-panel">
-    <div class="panel-title" style="margin-bottom:16px">Покупки / Продажи по товарам</div>
+    <div class="panel-title" style="margin-bottom:16px">Продажи / Скупка по товарам</div>
     <div class="split-inner">
-      <div>
-        <div class="split-side-label lbl-buy">▲ ПОКУПКИ</div>
-        <div id="bars-buy"></div>
-      </div>
       <div>
         <div class="split-side-label lbl-sell">▼ ПРОДАЖИ</div>
         <div id="bars-sell"></div>
+      </div>
+      <div>
+        <div class="split-side-label lbl-buy">▲ СКУПКА</div>
+        <div id="bars-buy"></div>
       </div>
     </div>
   </div>
@@ -532,22 +532,22 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
   <!-- TOP BUYERS + SELLERS + QTY -->
   <div class="bottom-grid section-anchor" style="grid-template-columns:1fr 1fr">
     <div class="chart-panel">
-      <div class="panel-title" style="color:var(--buy)">Топ покупателей ($)</div>
-      <div id="bars-buyers"></div>
-    </div>
-    <div class="chart-panel">
       <div class="panel-title" style="color:var(--sell)">Топ продавцов ($)</div>
       <div id="bars-sellers"></div>
+    </div>
+    <div class="chart-panel">
+      <div class="panel-title" style="color:var(--buy)">Топ скупщиков ($)</div>
+      <div id="bars-buyers"></div>
     </div>
   </div>
   <div class="bottom-grid" style="grid-template-columns:1fr 1fr;margin-top:12px">
     <div class="chart-panel">
-      <div class="panel-title" style="color:var(--buy)">Топ товаров по кол-ву (покупки)</div>
-      <div id="bars-qty-buy"></div>
-    </div>
-    <div class="chart-panel">
       <div class="panel-title" style="color:var(--sell)">Топ товаров по кол-ву (продажи)</div>
       <div id="bars-qty-sell"></div>
+    </div>
+    <div class="chart-panel">
+      <div class="panel-title" style="color:var(--buy)">Топ товаров по кол-ву (скупка)</div>
+      <div id="bars-qty-buy"></div>
     </div>
   </div>
 
@@ -762,7 +762,7 @@ function buildStats(){
   document.getElementById('s-total').textContent   = fmtN(d.length);
   document.getElementById('s-revenue').textContent = fmt$(d.reduce((s,r)=>s+r.price,0));
   document.getElementById('s-buy').textContent     = fmtN(buyRecs.length);
-  document.getElementById('s-buy-sum').textContent = fmt$(buySum)+' куплено';
+  document.getElementById('s-buy-sum').textContent = fmt$(buySum)+' скуплено';
   document.getElementById('s-sell').textContent    = fmtN(sellRecs.length);
   document.getElementById('s-sell-sum').textContent= fmt$(sellSum)+' продано';
   document.getElementById('s-buy-pct').textContent = total>0 ? Math.round(buySum/total*100)+'%' : '';
@@ -984,7 +984,7 @@ function renderTable(){
         <tr>
           <td class="date">${r.date||''}</td>
           <td class="time">${r.time||''}</td>
-          <td class="type-${r.type}">${r.type==='buy'?'▲ КУПЛЯ':'▼ ПРОДАЖА'}</td>
+          <td class="type-${r.type}">${r.type==='buy'?'▲ СКУПКА':'▼ ПРОДАЖА'}</td>
           <td class="nick">${r.nick}</td>
           <td class="item">${r.item}</td>
           <td class="qty">${fmtN(r.qty)}</td>
