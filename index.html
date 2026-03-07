@@ -476,7 +476,7 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
         <span style="position:absolute;right:0;font-size:18px;color:var(--sell);font-family:var(--head)" id="s-sell-pct"></span>
       </div>
       <div class="sc-val" id="s-sell">—</div>
-      <div class="sc-sub" id="s-sell-sum">$ sold</div>
+      <div class="sc-sub" id="s-sell-sum">$ продано</div>
     </div>
     <div class="stat-card sc-buy" style="--accent:var(--buy)">
       <div class="sc-label" style="position:relative">
@@ -802,8 +802,8 @@ function buildDailyChart(){
     if(r.type==='buy')  byBuy[k] =(byBuy[k] ||0)+r.price;
     if(r.type==='sell') bySell[k]=(bySell[k]||0)+r.price;
   });
-  chartDailyBuy  = makeBarChart('chart-daily-buy',  byBuy,  '#00ff88', chartDailyBuy);
-  chartDailySell = makeBarChart('chart-daily-sell', bySell, '#ff4466', chartDailySell);
+  chartDailyBuy  = makeBarChart('chart-daily-buy',  bySell, '#00ff88', chartDailyBuy);
+  chartDailySell = makeBarChart('chart-daily-sell', byBuy,  '#ff4466', chartDailySell);
 }
 
 function buildItemsChart(){
@@ -853,8 +853,8 @@ function buildBuySellBars(){
         <div class="bar-val ${cls}">${fmt$(val)}</div>
       </div>`).join('');
   }
-  makeBars('bars-buy',  topBuy,  'buy');
-  makeBars('bars-sell', topSell, 'sell');
+  makeBars('bars-buy',  topSell, 'buy');
+  makeBars('bars-sell', topBuy,  'sell');
 }
 
 function buildBuyersBars(){
@@ -908,8 +908,8 @@ function buildQtyBars(){
     if(r.type==='buy')  byBuy[r.item] =(byBuy[r.item] ||0)+r.qty;
     if(r.type==='sell') bySell[r.item]=(bySell[r.item]||0)+r.qty;
   });
-  makeQtyBars('bars-qty-buy',  byBuy,  '#00ff88', '#00ff8833');
-  makeQtyBars('bars-qty-sell', bySell, '#ff4466', '#ff446633');
+  makeQtyBars('bars-qty-buy',  bySell, '#00ff88', '#00ff8833');
+  makeQtyBars('bars-qty-sell', byBuy,  '#ff4466', '#ff446633');
 }
 
 function buildFilters(){
