@@ -868,8 +868,8 @@ function buildBuyersBars(){
   elBuy.innerHTML=sortedBuy.map(([lbl,val])=>`
     <div class="bar-item">
       <div class="bar-label" title="${lbl}">${lbl}</div>
-      <div class="bar-track"><div class="bar-fill buy" style="width:${(val/maxBuy*100).toFixed(1)}%"></div></div>
-      <div class="bar-val buy">${fmt$(val)}</div>
+      <div class="bar-track"><div class="bar-fill sell" style="width:${(val/maxBuy*100).toFixed(1)}%"></div></div>
+      <div class="bar-val sell">${fmt$(val)}</div>
     </div>`).join('');
 
   // Sellers (type=sell)
@@ -883,8 +883,8 @@ function buildBuyersBars(){
     elSell.innerHTML=sortedSell.map(([lbl,val])=>`
       <div class="bar-item">
         <div class="bar-label" title="${lbl}">${lbl}</div>
-        <div class="bar-track"><div class="bar-fill sell" style="width:${(val/maxSell*100).toFixed(1)}%"></div></div>
-        <div class="bar-val sell">${fmt$(val)}</div>
+        <div class="bar-track"><div class="bar-fill buy" style="width:${(val/maxSell*100).toFixed(1)}%"></div></div>
+        <div class="bar-val buy">${fmt$(val)}</div>
       </div>`).join('');
   }
 }
