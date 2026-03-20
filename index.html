@@ -148,6 +148,51 @@ main {
 .tab.active-sell { background:rgba(255,68,102,.1); color:var(--sell); }
 .tab:hover { color:var(--text); }
 
+.range-panel {
+  background:var(--panel); border:1px solid var(--border);
+  padding:18px; margin-bottom:22px;
+}
+.range-head {
+  display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
+  margin-bottom:14px; flex-wrap:wrap;
+}
+.range-hint {
+  font-size:10px; color:var(--dim); letter-spacing:1px;
+}
+.range-controls {
+  display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+}
+.range-presets {
+  display:flex; gap:8px; flex-wrap:wrap;
+}
+.range-btn,
+.range-apply {
+  background:transparent; border:1px solid var(--border);
+  color:var(--text); font-family:var(--mono); font-size:11px;
+  padding:7px 12px; cursor:pointer; transition:all .15s;
+}
+.range-btn:hover,
+.range-apply:hover { border-color:var(--cyan); color:var(--cyan); }
+.range-btn.active {
+  border-color:var(--green); color:var(--green);
+  background:rgba(0,255,136,.08);
+}
+.range-custom {
+  display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+}
+.range-label {
+  font-size:10px; color:var(--dim); letter-spacing:1px; text-transform:uppercase;
+}
+.range-date {
+  background:var(--bg); border:1px solid var(--border);
+  color:var(--text); font-family:var(--mono); font-size:12px;
+  padding:6px 10px; outline:none; min-width:150px;
+}
+.range-date:focus { border-color:var(--cyan); }
+.range-summary {
+  font-size:11px; color:var(--cyan); margin-left:auto;
+}
+
 /* ── STAT CARDS ── */
 .stat-row {
   display:grid;
@@ -266,7 +311,7 @@ td.type-buy  { color:var(--buy);  font-size:10px; letter-spacing:1px; }
 td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
 
 .pagination {
-  display:flex; gap:5px; justify-content:flex-end; margin-top:12px; align-items:center;
+  display:flex; gap:6px; justify-content:flex-end; margin-top:12px; align-items:center; flex-wrap:wrap;
 }
 .pg-btn {
   background:transparent; border:1px solid var(--border);
@@ -276,6 +321,12 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
 .pg-btn:hover { border-color:var(--cyan); color:var(--cyan); }
 .pg-btn.active { border-color:var(--green); color:var(--green); background:rgba(0,255,136,.08); }
 .pg-btn:disabled { opacity:.3; cursor:default; }
+.pg-gap {
+  color:var(--dim); padding:0 4px; font-size:12px;
+}
+.pg-meta {
+  color:var(--dim); font-size:11px; margin-left:8px;
+}
 
 .no-data {
   text-align:center; padding:50px 20px; color:var(--dim);
@@ -315,6 +366,17 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
   .type-tabs { width:100%; }
   .tab { flex:1; text-align:center; padding:10px 6px; font-size:11px; }
 
+  /* Range controls */
+  .range-panel { padding:12px; }
+  .range-controls,
+  .range-custom { width:100%; }
+  .range-controls { align-items:stretch; }
+  .range-presets { width:100%; }
+  .range-btn,
+  .range-apply { flex:1; text-align:center; }
+  .range-date { width:100%; min-width:0; }
+  .range-summary { margin-left:0; }
+
   /* Stat cards: 2 columns */
   .stat-row { grid-template-columns: 1fr 1fr; gap:8px; }
   .sc-val    { font-size:20px; }
@@ -347,6 +409,7 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
 
   /* Pagination compact */
   .pg-btn { padding:6px 10px; font-size:11px; }
+  .pg-meta { width:100%; margin-left:0; text-align:right; }
 
   /* Modal full-width */
   .mbox { width:95vw; padding:20px 16px; }
@@ -456,6 +519,28 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
     <button class="tab active-all" id="tab-all"  onclick="setTypeFilter('all')">ALL</button>
     <button class="tab"            id="tab-sell" onclick="setTypeFilter('sell')">▼ SELL</button>
     <button class="tab"            id="tab-buy"  onclick="setTypeFilter('buy')">▲ BUY</button>
+  </div>
+
+  <div class="range-panel section-anchor">
+    <div class="range-head">
+      <div class="panel-title">Период данных</div>
+      <div class="range-hint">Топ покупателей и топ продавцов всегда показывают всю историю.</div>
+    </div>
+    <div class="range-controls">
+      <div class="range-presets">
+        <button class="range-btn active" id="range-preset-7d" onclick="setDatePreset('7d')">7 дней</button>
+        <button class="range-btn" id="range-preset-30d" onclick="setDatePreset('30d')">30 дней</button>
+        <button class="range-btn" id="range-preset-all" onclick="setDatePreset('all')">Всё время</button>
+      </div>
+      <div class="range-custom">
+        <span class="range-label">С</span>
+        <input class="range-date" type="date" id="range-from">
+        <span class="range-label">По</span>
+        <input class="range-date" type="date" id="range-to">
+        <button class="range-apply" onclick="applyCustomRange()">Применить даты</button>
+      </div>
+      <div class="range-summary" id="range-summary">Последние 7 дней</div>
+    </div>
   </div>
 
   <!-- STAT CARDS -->
@@ -649,10 +734,228 @@ let typeFilter = 'all';
 let sortCol = 'date', sortDir = -1;
 let page = 0;
 const PER = 50;
+const DAY_MS = 24 * 60 * 60 * 1000;
 let chartDailyBuy = null, chartDailySell = null, chartItems = null;
 let refreshTimer = null;
+let datePreset = '7d';
+let customRange = { from:'', to:'' };
+let dateBounds = { min:null, max:null };
 
 // ── Modal ──
+function pad2(n){ return String(n).padStart(2, '0'); }
+function toNumber(value){
+  const num = Number(String(value ?? '').replace(/\s+/g, '').replace(',', '.'));
+  return Number.isFinite(num) ? num : 0;
+}
+function parseDateParts(value){
+  const raw = String(value ?? '').trim();
+  if(!raw) return null;
+  const text = raw.length >= 10 ? raw.slice(0, 10) : raw;
+
+  let match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(match) return { y:Number(match[1]), m:Number(match[2]), d:Number(match[3]) };
+
+  match = text.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if(match) return { y:Number(match[3]), m:Number(match[2]), d:Number(match[1]) };
+
+  match = text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if(match) return { y:Number(match[3]), m:Number(match[2]), d:Number(match[1]) };
+
+  return null;
+}
+function parseDateToTs(value){
+  const parts = parseDateParts(value);
+  return parts ? Date.UTC(parts.y, parts.m - 1, parts.d) : null;
+}
+function parseTimeToSeconds(value){
+  const match = String(value ?? '').trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if(!match) return null;
+  return Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3] || 0);
+}
+function toInputDate(ts){
+  if(!Number.isFinite(ts)) return '';
+  const date = new Date(ts);
+  return `${date.getUTCFullYear()}-${pad2(date.getUTCMonth()+1)}-${pad2(date.getUTCDate())}`;
+}
+function toDisplayDate(ts){
+  if(!Number.isFinite(ts)) return '—';
+  const date = new Date(ts);
+  return `${pad2(date.getUTCDate())}.${pad2(date.getUTCMonth()+1)}.${date.getUTCFullYear()}`;
+}
+function normalizeRecord(record){
+  const qty = toNumber(record.qty);
+  const price = toNumber(record.price);
+  const dateTs = parseDateToTs(record.date);
+  const timeSec = parseTimeToSeconds(record.time);
+  return {
+    ...record,
+    type: record.type || 'buy',
+    nick: String(record.nick ?? ''),
+    item: String(record.item ?? ''),
+    qty,
+    price,
+    _dateTs: dateTs,
+    _timeSec: timeSec,
+    _sortTs: Number.isFinite(dateTs) ? dateTs + (Number.isFinite(timeSec) ? timeSec * 1000 : 0) : null,
+    _ppu: qty > 0 ? Math.round(price / qty) : 0,
+  };
+}
+function updateDateBounds(){
+  let min = null;
+  let max = null;
+  rawData.forEach(record => {
+    if(!Number.isFinite(record._dateTs)) return;
+    if(min === null || record._dateTs < min) min = record._dateTs;
+    if(max === null || record._dateTs > max) max = record._dateTs;
+  });
+  dateBounds = { min, max };
+}
+function getActiveRange(){
+  if(datePreset === 'all'){
+    return { from:null, to:null, inputFrom:dateBounds.min, inputTo:dateBounds.max, label:'Вся история' };
+  }
+
+  if(datePreset === 'custom'){
+    const from = customRange.from ? parseDateToTs(customRange.from) : dateBounds.min;
+    const to = customRange.to ? parseDateToTs(customRange.to) : dateBounds.max;
+    const safeFrom = Number.isFinite(from) ? from : dateBounds.min;
+    const safeTo = Number.isFinite(to) ? to : dateBounds.max;
+    if(Number.isFinite(safeFrom) && Number.isFinite(safeTo) && safeFrom > safeTo){
+      return { from:safeTo, to:safeFrom, inputFrom:safeTo, inputTo:safeFrom, label:'Свой период' };
+    }
+    return { from:safeFrom, to:safeTo, inputFrom:safeFrom, inputTo:safeTo, label:'Свой период' };
+  }
+
+  if(!Number.isFinite(dateBounds.max)){
+    return { from:null, to:null, inputFrom:null, inputTo:null, label:'Последние 7 дней' };
+  }
+
+  const days = datePreset === '30d' ? 30 : 7;
+  const to = dateBounds.max;
+  const from = Math.max(dateBounds.min ?? to, to - (days - 1) * DAY_MS);
+  return {
+    from,
+    to,
+    inputFrom:from,
+    inputTo:to,
+    label: days === 30 ? 'Последние 30 дней' : 'Последние 7 дней'
+  };
+}
+function isRecordInActiveRange(record){
+  if(datePreset === 'all') return true;
+  if(!Number.isFinite(record._dateTs)) return false;
+  const range = getActiveRange();
+  if(Number.isFinite(range.from) && record._dateTs < range.from) return false;
+  if(Number.isFinite(range.to) && record._dateTs > range.to) return false;
+  return true;
+}
+function getRangeData(){
+  return rawData.filter(isRecordInActiveRange);
+}
+function visibleData(){
+  const base = getRangeData();
+  if(typeFilter === 'all') return base;
+  return base.filter(record => record.type === typeFilter);
+}
+function syncRangeControls(){
+  const fromInput = document.getElementById('range-from');
+  const toInput = document.getElementById('range-to');
+  const summary = document.getElementById('range-summary');
+  if(!fromInput || !toInput || !summary) return;
+
+  const minValue = toInputDate(dateBounds.min);
+  const maxValue = toInputDate(dateBounds.max);
+  fromInput.min = minValue;
+  fromInput.max = maxValue;
+  toInput.min = minValue;
+  toInput.max = maxValue;
+
+  const range = getActiveRange();
+  fromInput.value = toInputDate(range.inputFrom);
+  toInput.value = toInputDate(range.inputTo);
+
+  ['7d','30d','all'].forEach(preset => {
+    const button = document.getElementById(`range-preset-${preset}`);
+    if(button) button.classList.toggle('active', datePreset === preset);
+  });
+
+  if(!rawData.length){
+    summary.textContent = 'Нет данных';
+  } else if(datePreset === 'all'){
+    summary.textContent = 'Период: вся история';
+  } else if(Number.isFinite(range.inputFrom) && Number.isFinite(range.inputTo)){
+    summary.textContent = `${range.label}: ${toDisplayDate(range.inputFrom)} - ${toDisplayDate(range.inputTo)}`;
+  } else {
+    summary.textContent = range.label;
+  }
+}
+function setDatePreset(preset){
+  datePreset = preset;
+  page = 0;
+  renderAll();
+}
+function applyCustomRange(){
+  let from = document.getElementById('range-from').value;
+  let to = document.getElementById('range-to').value;
+  const fromTs = parseDateToTs(from);
+  const toTs = parseDateToTs(to);
+  if(Number.isFinite(fromTs) && Number.isFinite(toTs) && fromTs > toTs){
+    [from, to] = [to, from];
+  }
+  customRange = { from, to };
+  datePreset = from || to ? 'custom' : 'all';
+  page = 0;
+  renderAll();
+}
+function compareValues(av, bv, dir){
+  const aMissing = av === null || av === undefined || Number.isNaN(av);
+  const bMissing = bv === null || bv === undefined || Number.isNaN(bv);
+  if(aMissing && bMissing) return 0;
+  if(aMissing) return 1;
+  if(bMissing) return -1;
+  if(typeof av === 'number' && typeof bv === 'number'){
+    if(av === bv) return 0;
+    return av > bv ? dir : -dir;
+  }
+  const cmp = String(av).localeCompare(String(bv), 'ru', { numeric:true, sensitivity:'base' });
+  if(cmp === 0) return 0;
+  return cmp > 0 ? dir : -dir;
+}
+function compareDateLabels(a, b, dir = 1){
+  return compareValues(parseDateToTs(a), parseDateToTs(b), dir) || compareValues(a, b, dir);
+}
+function compareByCol(a, b, col, dir){
+  switch(col){
+    case 'date':
+      return compareValues(a._dateTs, b._dateTs, dir) || compareValues(a._timeSec, b._timeSec, dir);
+    case 'time':
+      return compareValues(a._timeSec, b._timeSec, dir) || compareValues(a._dateTs, b._dateTs, -1);
+    case 'type':
+      return compareValues(a.type, b.type, dir);
+    case 'nick':
+      return compareValues(a.nick, b.nick, dir);
+    case 'item':
+      return compareValues(a.item, b.item, dir);
+    case 'qty':
+      return compareValues(a.qty, b.qty, dir);
+    case 'price':
+      return compareValues(a.price, b.price, dir);
+    case '_ppu':
+      return compareValues(a._ppu, b._ppu, dir);
+    default:
+      return compareValues(a[col], b[col], dir);
+  }
+}
+function sortFilteredData(){
+  filtered.sort((a, b) => {
+    const primary = compareByCol(a, b, sortCol, sortDir);
+    if(primary !== 0) return primary;
+    return compareByCol(a, b, 'date', -1)
+      || compareByCol(a, b, 'time', -1)
+      || compareByCol(a, b, 'nick', 1);
+  });
+}
+
 function openModal(){
   document.getElementById('cfg-gist').value = cfg.gistId;
   document.getElementById('cfg-ref').value  = cfg.refresh;
@@ -695,9 +998,7 @@ async function loadData(){
     } else {
       jsonText = file.content;
     }
-    rawData = JSON.parse(jsonText);
-    // Ensure type field exists (backward compat)
-    rawData.forEach(r=>{ if(!r.type) r.type='buy'; });
+    rawData = JSON.parse(jsonText).map(normalizeRecord);
     setStatus('live', `OK · ${rawData.length} записей`);
     renderAll();
   } catch(e){
@@ -722,14 +1023,11 @@ function setTypeFilter(t){
   buildStats();
   buildDailyChart();
   buildItemsChart();
+  buildBuySellBars();
   buildBuyersBars();
   buildQtyBars();
+  buildFilters();
   applyFilters();
-}
-
-function visibleData(){
-  if(typeFilter==='all') return rawData;
-  return rawData.filter(r=>r.type===typeFilter);
 }
 
 // ── Format ──
@@ -739,6 +1037,8 @@ function fmtN(n){ return n.toLocaleString('ru'); }
 // ── Render all ──
 function renderAll(){
   hideLoading();
+  updateDateBounds();
+  syncRangeControls();
   buildStats();
   buildDailyChart();
   buildItemsChart();
@@ -751,7 +1051,7 @@ function renderAll(){
 
 function buildStats(){
   const d   = visibleData();
-  const all = rawData;
+  const all = getRangeData();
 
   const buyRecs  = all.filter(r=>r.type==='buy');
   const sellRecs = all.filter(r=>r.type==='sell');
@@ -768,14 +1068,17 @@ function buildStats(){
   document.getElementById('s-buy-pct').textContent = total>0 ? Math.round(buySum/total*100)+'%' : '';
   document.getElementById('s-sell-pct').textContent= total>0 ? Math.round(sellSum/total*100)+'%' : '';
   document.getElementById('s-items').textContent   = new Set(d.map(r=>r.item)).size;
-  const dates = all.map(r=>r.date).filter(Boolean).sort();
+  const lastDate = all.reduce((latest, record) => {
+    if(!Number.isFinite(record._dateTs)) return latest;
+    return latest === null || record._dateTs > latest ? record._dateTs : latest;
+  }, null);
+  const dates = [Number.isFinite(lastDate) ? toDisplayDate(lastDate) : '—'];
   document.getElementById('s-date').textContent    = dates[dates.length-1]||'—';
 }
 
 function buildDailyChart(){
   function makeBarChart(canvasId, data, color, chartRef){
-    // collect all dates from rawData for consistent x-axis
-    const allDates=[...new Set(rawData.map(r=>r.date||'?'))].sort();
+    const allDates=[...new Set(getRangeData().map(r=>r.date||'?'))].sort((a,b)=>compareDateLabels(a,b,1));
     const vals=allDates.map(d=>data[d]||0);
     const ctx=document.getElementById(canvasId);
     if(!ctx) return null;
@@ -797,7 +1100,7 @@ function buildDailyChart(){
     });
   }
   const byBuy={}, bySell={};
-  rawData.forEach(r=>{
+  getRangeData().forEach(r=>{
     const k=r.date||'?';
     if(r.type==='buy')  byBuy[k] =(byBuy[k] ||0)+r.price;
     if(r.type==='sell') bySell[k]=(bySell[k]||0)+r.price;
@@ -836,7 +1139,7 @@ function buildItemsChart(){
 
 function buildBuySellBars(){
   const byBuy={}, bySell={};
-  rawData.forEach(r=>{
+  getRangeData().forEach(r=>{
     if(r.type==='buy')  byBuy[r.item] =(byBuy[r.item] ||0)+r.price;
     if(r.type==='sell') bySell[r.item]=(bySell[r.item]||0)+r.price;
   });
@@ -904,7 +1207,7 @@ function buildQtyBars(){
       </div>`).join('');
   }
   const byBuy={}, bySell={};
-  rawData.forEach(r=>{
+  getRangeData().forEach(r=>{
     if(r.type==='buy')  byBuy[r.item] =(byBuy[r.item] ||0)+r.qty;
     if(r.type==='sell') bySell[r.item]=(bySell[r.item]||0)+r.qty;
   });
@@ -913,19 +1216,26 @@ function buildQtyBars(){
 }
 
 function buildFilters(){
-  const items=[...new Set(rawData.map(r=>r.item))].sort();
-  const dates=[...new Set(rawData.map(r=>r.date).filter(Boolean))].sort().reverse();
-  document.getElementById('tbl-item').innerHTML=
+  const itemSelect = document.getElementById('tbl-item');
+  const dateSelect = document.getElementById('tbl-date');
+  const prevItem = itemSelect.value;
+  const prevDate = dateSelect.value;
+  const base = visibleData();
+  const items=[...new Set(base.map(r=>r.item).filter(Boolean))].sort((a,b)=>compareValues(a,b,1));
+  const dates=[...new Set(base.map(r=>r.date).filter(Boolean))].sort((a,b)=>compareDateLabels(a,b,-1));
+  itemSelect.innerHTML=
     '<option value="">Все товары</option>'+items.map(i=>`<option>${i}</option>`).join('');
-  document.getElementById('tbl-date').innerHTML=
+  dateSelect.innerHTML=
     '<option value="">Все даты</option>'+dates.map(d=>`<option>${d}</option>`).join('');
+  itemSelect.value = items.includes(prevItem) ? prevItem : '';
+  dateSelect.value = dates.includes(prevDate) ? prevDate : '';
 }
 
-function applyFilters(){
+function applyFilters(resetPage = true){
   const q    = document.getElementById('tbl-q').value.toLowerCase();
   const item = document.getElementById('tbl-item').value;
   const date = document.getElementById('tbl-date').value;
-  const base = typeFilter==='all' ? rawData : rawData.filter(r=>r.type===typeFilter);
+  const base = visibleData();
 
   filtered = base.filter(r=>{
     if(item && r.item!==item) return false;
@@ -934,16 +1244,42 @@ function applyFilters(){
     return true;
   });
 
-  filtered.sort((a,b)=>{
-    let av=a[sortCol], bv=b[sortCol];
-    if(typeof av==='string') return av.localeCompare(bv)*sortDir;
-    return (av-bv)*sortDir;
-  });
+  sortFilteredData();
 
-  page=0; renderTable();
+  if(resetPage) page=0;
+  renderTable();
 }
 
 function buildPagination(containerId, pages){
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  if(pages <= 1){ container.innerHTML=''; return; }
+
+  const parts = [];
+  const addButton = (label, target, disabled = false, active = false) => {
+    parts.push(`<button class="pg-btn${active?' active':''}" onclick="goPage(${target})" ${disabled?'disabled':''}>${label}</button>`);
+  };
+  const addGap = () => parts.push('<span class="pg-gap">…</span>');
+
+  addButton('«', 0, page === 0);
+  addButton('‹', Math.max(0, page - 1), page === 0);
+  addButton('-5', Math.max(0, page - 5), page === 0);
+
+  const visiblePages = new Set([0, pages - 1]);
+  for(let i = Math.max(0, page - 2); i <= Math.min(pages - 1, page + 2); i++) visiblePages.add(i);
+  const orderedPages = [...visiblePages].sort((a, b) => a - b);
+
+  orderedPages.forEach((pageIndex, index) => {
+    if(index > 0 && pageIndex - orderedPages[index - 1] > 1) addGap();
+    addButton(String(pageIndex + 1), pageIndex, false, pageIndex === page);
+  });
+
+  addButton('+5', Math.min(pages - 1, page + 5), page === pages - 1);
+  addButton('›', Math.min(pages - 1, page + 1), page === pages - 1);
+  addButton('»', pages - 1, page === pages - 1);
+  parts.push(`<span class="pg-meta">Стр. ${page + 1} / ${pages}</span>`);
+  container.innerHTML = parts.join('');
+  return;
   let pg=`<button class="pg-btn" onclick="goPage(${page-1})" ${page===0?'disabled':''}>← НАЗАД</button>`;
   const lo=Math.max(0,page-2), hi=Math.min(pages-1,page+2);
   for(let i=lo;i<=hi;i++)
@@ -954,8 +1290,9 @@ function buildPagination(containerId, pages){
 
 function renderTable(){
   document.getElementById('tbl-count').textContent = filtered.length+' записей';
+  const pages = filtered.length ? Math.ceil(filtered.length/PER) : 0;
+  if(pages > 0 && page >= pages) page = pages - 1;
   const rows = filtered.slice(page*PER, (page+1)*PER);
-  const pages = Math.ceil(filtered.length/PER);
 
   if(!rows.length){
     document.getElementById('tbl-wrap').innerHTML=
@@ -1016,6 +1353,8 @@ function renderTable(){
 
 function setSort(col){
   if(sortCol===col) sortDir*=-1; else{sortCol=col;sortDir=-1;}
+  page = 0;
+  sortFilteredData();
   renderTable();
 }
 function goPage(p){
@@ -1030,9 +1369,11 @@ function goPage(p){
   if(nb) nb.classList.add('active');
 }
 
-document.getElementById('tbl-q').addEventListener('input', applyFilters);
-document.getElementById('tbl-item').addEventListener('change', applyFilters);
-document.getElementById('tbl-date').addEventListener('change', applyFilters);
+document.getElementById('tbl-q').addEventListener('input', ()=>applyFilters());
+document.getElementById('tbl-item').addEventListener('change', ()=>applyFilters());
+document.getElementById('tbl-date').addEventListener('change', ()=>applyFilters());
+document.getElementById('range-from').addEventListener('keydown', e=>{ if(e.key==='Enter') applyCustomRange(); });
+document.getElementById('range-to').addEventListener('keydown', e=>{ if(e.key==='Enter') applyCustomRange(); });
 
 // ── Init ──
 loadData();
