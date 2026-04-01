@@ -209,6 +209,7 @@ main {
 .sc-green::before  { background:var(--green); box-shadow:0 0 8px var(--green); }
 .sc-cyan::before   { background:var(--cyan);  box-shadow:0 0 8px var(--cyan); }
 .sc-sell::before   { background:var(--sell);  box-shadow:0 0 8px var(--sell); }
+.sc-buy::before    { background:var(--buy);   box-shadow:0 0 8px var(--buy); }
 .sc-orange::before { background:var(--orange);box-shadow:0 0 8px var(--orange); }
 .sc-yellow::before { background:var(--yellow);box-shadow:0 0 8px var(--yellow); }
 
@@ -220,6 +221,32 @@ main {
 .sc-sell  .sc-val  { color:var(--sell); }
 .sc-orange .sc-val { color:var(--orange); }
 .sc-yellow .sc-val { color:var(--yellow); }
+
+/* ── TOP ITEMS LIST ── */
+#chart-items-custom { display:flex; flex-direction:column; gap:5px; max-height:320px; overflow-y:auto; }
+.top-item-row {
+  display:flex; align-items:center; gap:8px;
+  padding:5px 8px; border:1px solid transparent;
+  position:relative; font-size:11px;
+}
+.top-item-row.item-buy {
+  border-color:var(--buy);
+  box-shadow:0 0 6px rgba(0,255,136,.3), inset 0 0 8px rgba(0,255,136,.05);
+}
+.top-item-row.item-sell {
+  border-color:var(--sell);
+  box-shadow:0 0 6px rgba(255,68,102,.3), inset 0 0 8px rgba(255,68,102,.05);
+}
+.top-item-badge { font-family:var(--head); font-weight:700; font-size:13px; width:20px; text-align:center; flex-shrink:0; }
+.top-item-badge.buy  { color:var(--buy); }
+.top-item-badge.sell { color:var(--sell); }
+.top-item-name { flex:1; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.top-item-type { font-family:var(--head); font-size:9px; letter-spacing:1px; padding:1px 5px; flex-shrink:0; }
+.top-item-type.buy  { color:var(--buy);  border:1px solid var(--buy);  background:rgba(0,255,136,.08); }
+.top-item-type.sell { color:var(--sell); border:1px solid var(--sell); background:rgba(255,68,102,.08); }
+.top-item-val { font-family:var(--head); font-size:12px; font-weight:600; flex-shrink:0; }
+.top-item-val.buy  { color:var(--buy); }
+.top-item-val.sell { color:var(--sell); }
 
 /* ── CHARTS ── */
 .charts-grid {
@@ -307,8 +334,8 @@ td.price { color:var(--green); text-align:right; font-weight:bold; }
 td.ppu   { color:var(--dim); text-align:right; font-size:11px; }
 td.date  { color:var(--dim); font-size:11px; }
 td.time  { color:var(--dim); font-size:11px; }
-td.type-buy  { color:var(--buy);  font-size:10px; letter-spacing:1px; }
-td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
+td.type-buy  { color:var(--sell); font-size:10px; letter-spacing:1px; }
+td.type-sell { color:var(--buy);  font-size:10px; letter-spacing:1px; }
 
 .pagination {
   display:flex; gap:6px; justify-content:flex-end; margin-top:12px; align-items:center; flex-wrap:wrap;
@@ -464,8 +491,8 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
   margin-bottom:5px;
 }
 .tx-card-nick { color:var(--cyan); font-size:12px; }
-.tx-card-type-buy  { color:var(--buy);  font-size:10px; letter-spacing:1px; }
-.tx-card-type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
+.tx-card-type-buy  { color:var(--sell); font-size:10px; letter-spacing:1px; }
+.tx-card-type-sell { color:var(--buy);  font-size:10px; letter-spacing:1px; }
 .tx-card-item  { color:var(--text); font-size:12px; margin-bottom:4px; }
 .tx-card-row   { display:flex; justify-content:space-between; margin-top:3px; }
 .tx-card-price { color:var(--green); font-family:var(--head); font-size:15px; font-weight:700; }
@@ -517,8 +544,8 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
   <!-- TYPE FILTER TABS -->
   <div class="type-tabs">
     <button class="tab active-all" id="tab-all"  onclick="setTypeFilter('all')">ALL</button>
-    <button class="tab"            id="tab-sell" onclick="setTypeFilter('sell')">▼ SELL</button>
     <button class="tab"            id="tab-buy"  onclick="setTypeFilter('buy')">▲ BUY</button>
+    <button class="tab"            id="tab-sell" onclick="setTypeFilter('sell')">▼ SELL</button>
   </div>
 
   <div class="range-panel section-anchor">
@@ -555,14 +582,6 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
       <div class="sc-val" id="s-revenue">—</div>
       <div class="sc-sub">$ turnover</div>
     </div>
-    <div class="stat-card sc-sell">
-      <div class="sc-label" style="position:relative">
-        SALES
-        <span style="position:absolute;right:0;font-size:18px;color:var(--sell);font-family:var(--head)" id="s-sell-pct"></span>
-      </div>
-      <div class="sc-val" id="s-sell">—</div>
-      <div class="sc-sub" id="s-sell-sum">$ продано</div>
-    </div>
     <div class="stat-card sc-buy" style="--accent:var(--buy)">
       <div class="sc-label" style="position:relative">
         СКУПКА
@@ -570,6 +589,14 @@ td.type-sell { color:var(--sell); font-size:10px; letter-spacing:1px; }
       </div>
       <div class="sc-val" id="s-buy" style="color:var(--buy)">—</div>
       <div class="sc-sub" id="s-buy-sum">$ скуплено</div>
+    </div>
+    <div class="stat-card sc-sell">
+      <div class="sc-label" style="position:relative">
+        SALES
+        <span style="position:absolute;right:0;font-size:18px;color:var(--sell);font-family:var(--head)" id="s-sell-pct"></span>
+      </div>
+      <div class="sc-val" id="s-sell">—</div>
+      <div class="sc-sub" id="s-sell-sum">$ продано</div>
     </div>
     <div class="stat-card sc-orange">
       <div class="sc-label">UNIQUE ITEMS</div>
@@ -1110,28 +1137,103 @@ function buildDailyChart(){
 }
 
 function buildItemsChart(){
-  const d=visibleData();
-  const byItem={};
-  d.forEach(r=>{ byItem[r.item]=(byItem[r.item]||0)+r.price; });
-  const sorted=Object.entries(byItem).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  const colors=['#00ff88','#00d4aa','#ffd700','#ffaa00','#ff4466','#44ffcc','#88ff44','#ff8844','#44aaff','#ff44aa'];
-  const ctx=document.getElementById('chart-items').getContext('2d');
+  const d = visibleData();
+  const byItemBuy = {}, byItemSell = {};
+  d.forEach(r => {
+    if(r.type === 'sell') byItemBuy[r.item]  = (byItemBuy[r.item]  || 0) + r.price;
+    if(r.type === 'buy')  byItemSell[r.item] = (byItemSell[r.item] || 0) + r.price;
+  });
+  const topBuy  = Object.entries(byItemBuy).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const topSell = Object.entries(byItemSell).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  // All unique labels across both
+  const allLabels = [...new Set([...topBuy.map(e=>e[0]), ...topSell.map(e=>e[0])])];
+  const buyMap  = Object.fromEntries(topBuy);
+  const sellMap = Object.fromEntries(topSell);
+
+  const buyData  = allLabels.map(l => buyMap[l]  || 0);
+  const sellData = allLabels.map(l => sellMap[l] || 0);
+
+  // Green palette for buy (скупка), red palette for sell (продажа)
+  const greenPalette = ['#00ff88','#00e67a','#00cc6c','#00b35e','#009950','#008042','#006634','#004d26'];
+  const redPalette   = ['#ff4466','#e63d5c','#cc3652','#b32e47','#99273d','#802033','#661928','#4d121e'];
+
+  const ctx = document.getElementById('chart-items').getContext('2d');
   if(chartItems) chartItems.destroy();
-  chartItems=new Chart(ctx,{
-    type:'doughnut',
-    data:{
-      labels:sorted.map(e=>e[0]),
-      datasets:[{data:sorted.map(e=>e[1]),
-        backgroundColor:colors.map(c=>c+'44'),borderColor:colors,borderWidth:2,hoverOffset:5}]
-    },
-    options:{
-      responsive:true,
-      plugins:{
-        legend:{
-          position: window.innerWidth<=700 ? 'bottom' : 'right',
-          labels:{color:'#7abfa0',font:{family:'Share Tech Mono',size:10},boxWidth:10}
+  chartItems = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: allLabels,
+      datasets: [
+        {
+          label: '▲ СКУПКА',
+          data: buyData,
+          backgroundColor: greenPalette.map(c => c + '55'),
+          borderColor: greenPalette,
+          borderWidth: 2,
+          hoverOffset: 6,
         },
-        tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt$(c.raw)}`}}
+        {
+          label: '▼ ПРОДАЖА',
+          data: sellData,
+          backgroundColor: redPalette.map(c => c + '55'),
+          borderColor: redPalette,
+          borderWidth: 2,
+          hoverOffset: 6,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      cutout: '40%',
+      plugins: {
+        legend: {
+          position: window.innerWidth <= 700 ? 'bottom' : 'right',
+          labels: {
+            color: '#7abfa0',
+            font: { family: 'Share Tech Mono', size: 10 },
+            boxWidth: 10,
+            generateLabels(chart) {
+              // Show dataset labels (Скупка / Продажа) as section headers + item names
+              const data = chart.data;
+              const out = [];
+              data.datasets.forEach((ds, di) => {
+                out.push({
+                  text: ds.label,
+                  fillStyle: di === 0 ? '#00ff8888' : '#ff446688',
+                  strokeStyle: di === 0 ? '#00ff88' : '#ff4466',
+                  lineWidth: 2,
+                  hidden: false,
+                  datasetIndex: di,
+                  index: -1,
+                  fontColor: di === 0 ? '#00ff88' : '#ff4466',
+                });
+                ds.data.forEach((val, i) => {
+                  if(val > 0) out.push({
+                    text: '  ' + data.labels[i],
+                    fillStyle: ds.backgroundColor[i],
+                    strokeStyle: ds.borderColor[i],
+                    lineWidth: 1,
+                    hidden: false,
+                    datasetIndex: di,
+                    index: i,
+                    fontColor: '#7abfa0',
+                  });
+                });
+              });
+              return out;
+            }
+          },
+          onClick(e, item, legend) {
+            if(item.index === -1) return;
+            Chart.defaults.plugins.legend.onClick.call(legend.chart, e, item, legend);
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: c => ` ${c.dataset.label} — ${c.label}: ${fmt$(c.raw)}`
+          }
+        }
       }
     }
   });
@@ -1321,7 +1423,7 @@ function renderTable(){
         <tr>
           <td class="date">${r.date||''}</td>
           <td class="time">${r.time||''}</td>
-          <td class="type-${r.type}">${r.type==='buy'?'▲ СКУПКА':'▼ ПРОДАЖА'}</td>
+          <td class="type-${r.type}">${r.type==='buy'?'▼ ПРОДАЖА':'▲ СКУПКА'}</td>
           <td class="nick">${r.nick}</td>
           <td class="item">${r.item}</td>
           <td class="qty">${fmtN(r.qty)}</td>
@@ -1337,7 +1439,7 @@ function renderTable(){
     <div class="tx-card">
       <div class="tx-card-top">
         <span class="tx-card-nick">${r.nick}</span>
-        <span class="tx-card-type-${r.type}">${r.type==='buy'?'▲ КУПЛЯ':'▼ ПРОДАЖА'}</span>
+        <span class="tx-card-type-${r.type}">${r.type==='buy'?'▼ ПРОДАЖА':'▲ СКУПКА'}</span>
       </div>
       <div class="tx-card-item">${r.item}</div>
       <div class="tx-card-row">
